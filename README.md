@@ -1,10 +1,10 @@
 # Better TOTD
 
-TODO
+A TOTD browser with info about your PBs and medals.
+
+### TODO
 
 - archivist option / integration
-- open in-game menu to page (mb not possible)
-
 
 License: Public Domain
 
