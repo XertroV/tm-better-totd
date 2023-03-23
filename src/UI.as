@@ -125,11 +125,12 @@ void DrawCampaignRowMonthRow(uint mIx) {
     UI::AlignTextToFramePadding();
     UI::Text(MonthShortStr(mIx, false));
     UI::TableNextColumn();
-    if (mIx < monthStats.Length && monthStats[mIx] !is null) {
+    bool exists = mIx < monthStats.Length && monthStats[mIx] !is null;
+    if (exists) {
         monthStats[mIx].DrawStatus();
     }
     UI::TableNextColumn();
-    if (UI::Button(Icons::Play)) {
+    if (exists && UI::Button(Icons::Play)) {
         g_SelectStatsTab = "By Month";
         g_SelectedMonth = mIx;
     }
@@ -145,11 +146,11 @@ void DrawStatsByCampaign() {
         UI::Text("No stats yet...");
         return;
     }
-    if (campaignStats[g_SelectedCampaign] is null) {
+    g_SelectedCampaign = DrawPaginationBar(CampaignStr(g_SelectedCampaign), g_SelectedCampaign, 0, campaignStats.Length - 1, changed);
+    if (g_SelectedCampaign >= int(campaignStats.Length) || campaignStats[g_SelectedCampaign] is null) {
         UI::Text("Stats not accessible; index (" + g_SelectedCampaign + ") outside range or stats are null.");
         return;
     }
-    g_SelectedCampaign = DrawPaginationBar(CampaignStr(g_SelectedCampaign), g_SelectedCampaign, 0, campaignStats.Length - 1, changed);
     campaignStats[g_SelectedCampaign].DrawStatus();
     UI::Separator();
     if (UI::BeginChild("totds-details")) {
@@ -170,11 +171,11 @@ void DrawStatsByMonth() {
         UI::Text("No stats yet...");
         return;
     }
-    if (monthStats[g_SelectedMonth] is null) {
+    g_SelectedMonth = DrawPaginationBar(MonthStr(g_SelectedMonth), g_SelectedMonth, 0, monthStats.Length - 1, changed);
+    if (g_SelectedMonth >= int(monthStats.Length) || monthStats[g_SelectedMonth] is null) {
         UI::Text("Stats not accessible; index (" + g_SelectedMonth + ") outside range or stats are null.");
         return;
     }
-    g_SelectedMonth = DrawPaginationBar(MonthStr(g_SelectedMonth), g_SelectedMonth, 0, monthStats.Length - 1, changed);
     monthStats[g_SelectedMonth].DrawStatus();
     UI::Separator();
     if (UI::BeginChild("totds-details")) {

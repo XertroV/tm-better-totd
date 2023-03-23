@@ -1,3 +1,15 @@
+void LoadMapNowWrapper(const string &in url) {
+ // #if DEPENDENCY_ARCHIVIST || DEPENDENCY_ARCHIVIST_DEV
+    if (S_LoadInArchivist) {
+        try {
+            Archivist::LoadMapFromUrlNow(url);
+            return;
+        } catch {}
+    }
+ // #endif
+    LoadMapNow(url);
+}
+
 void LoadMapNow(const string &in url, const string &in mode = "", const string &in settingsXml = "") {
     if (!Permissions::PlayLocalMap()) {
         NotifyError("Refusing to load map because you lack the necessary permissions. Standard or Club access required");

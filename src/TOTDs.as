@@ -48,6 +48,12 @@ void UpdateTotdCacheData() {
     }
     PopulateMapInfos();
     logNewTOTDs = true;
+    // ! testing
+    // while (allTotds.Length > 0) {
+    //     sleep(1000);
+    //     allTotds.RemoveLast();
+    //     MarkRecordCacheStale();
+    // }
 }
 
 void PopulateMapInfos() {
@@ -130,6 +136,7 @@ class LazyMap {
     int day;
     int weekDay;
     int startTimestamp;
+    int endTimestamp;
     string date;
     bool IsLikelyTroll = false;
 
@@ -140,6 +147,7 @@ class LazyMap {
         day = totdJson['monthDay'];
         weekDay = totdJson['day'];
         startTimestamp = totdJson["startTimestamp"];
+        endTimestamp = totdJson["endTimestamp"];
         date = FmtTimestampDateOnlyUTC(startTimestamp);
         date = tostring(year) + '-' + Text::Format('%02d', month) + '-' + Text::Format('%02d', day);
         // startnew(CoroutineFunc(LoadMap));
@@ -219,7 +227,7 @@ class LazyMap {
         auto rec = GetPlayerRecordOnMap(uid);
         bool timeChanged = false;
         if (rec !is null) {
-            timeChanged = playerRecordTime != rec.Time;
+            timeChanged = playerRecordTime != int(rec.Time);
             playerRecordTime = rec.Time;
             playerRecordTimeStr = Time::Format(rec.Time);
             playerRecordTimestamp = rec.Timestamp;
@@ -349,7 +357,7 @@ class LazyMap {
     }
 
     void LoadThisMapBlocking() {
-        LoadMapNow(mapUrl);
+        LoadMapNowWrapper(mapUrl);
     }
 
     void DrawMapTooltip() {

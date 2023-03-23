@@ -11,8 +11,6 @@ void WatchStaleStatsCache() {
     while (true) {
         sleep(100);
         if (recordStatsStale && staleTime + 500 <= Time::Now) {
-            // recalc stats less frequently if we're in a map -- avoid frame drops
-            if (g_mapUid.Length > 0) sleep(1500);
             recordStatsStale = false;
             staleTime = 0;
             RecalcTotdStats();
@@ -37,9 +35,17 @@ void RecalcTotdStats() {
         globalStats.CountLazyMap(lm);
         campaignStats[lm.campaignIx].CountLazyMap(lm);
         monthStats[lm.monthIx].CountLazyMap(lm);
-        if ((i + 1) % 100 == 0 && g_mapUid.Length > 0) yield();
     }
     g_FilteresChanged = true;
+    // ! testing
+    // for (uint i = monthStats.Length - 1; i < monthStats.Length; i--) {
+    //     if (monthStats[i].nbTracks == 0) monthStats.RemoveLast();
+    //     else break;
+    // }
+    // for (uint i = campaignStats.Length - 1; i < campaignStats.Length; i--) {
+    //     if (campaignStats[i].nbTracks == 0) campaignStats.RemoveLast();
+    //     else break;
+    // }
 }
 
 
@@ -189,6 +195,7 @@ class Stats {
         auto colWidth = width / 8.;
         float tableWidth = width / 8. * 7.;
         UI::SetCursorPos(UI::GetCursorPos() + vec2(colWidth / 2., 0));
+        vec2 btnSize = vec2(colWidth - fp.x, 50.);
         if (UI::BeginTable("month-table-" + map1.monthIx, 7, UI::TableFlags::None, vec2(tableWidth, 0))) {
             // skip to day of first map
             for (int i = 0; i < calStartOff; i++) {
@@ -197,13 +204,53 @@ class Stats {
             for (uint i = 0; i < maps.Length; i++) {
                 auto map = maps[i];
                 UI::TableNextColumn();
-                map.DrawCalendarButton(vec2(colWidth - fp.x, 50.));
+                map.DrawCalendarButton(btnSize);
+                // check for most recent TOTD
+                if (map.endTimestamp > Time::Stamp && Time::Stamp > map.startTimestamp) {
+                    UI::TableNextColumn();
+                    DrawNextTotdCountdownButton(btnSize);
+                }
             }
 
             UI::EndTable();
         }
     }
 }
+
+
+void DrawNextTotdCountdownButton(vec2 size) {
+    auto pos = UI::GetCursorPos();
+    UI::BeginDisabled();
+    UI::PushStyleColor(UI::Col::Button, vec4(.3));
+    UI::Button("", size);
+    UI::PopStyleColor();
+    UI::EndDisabled();
+    auto endPos = UI::GetCursorPos();
+
+    UI::PushFont(g_MidFont);
+    // auto fontH = UI::GetTextLineHeight();
+    auto timeLeft = "Next TOTD\n" + Time::Format(Math::Max(0, newTotdAt - Time::Stamp) * 1000, false, true, true);
+    auto textSz = Draw::MeasureString(timeLeft);
+    UI::SetCursorPos(pos + size * vec2(.5, .5) - textSz / 2.);
+    UI::PushStyleColor(UI::Col::Text, vec4(1, 1, 1, .5));
+    UI::Text(timeLeft);
+    UI::PopStyleColor();
+    // UI::SetCursorPos(pos + size * vec2(.5, .5) - vec2(fontH/2.66, fontH/2.) * .9);
+    // UI::Text(playerMedalLabel);
+    UI::PopFont();
+
+    // if (playerRecordTime > 0) {
+    //     // auto smallFontH = UI::GetTextLineHeight();
+    //     UI::PushFont(g_BoldFont);
+    //     auto recSz = Draw::MeasureString(playerRecordTimeStr);
+    //     UI::SetCursorPos(pos + size * vec2(.5, .5) - recSz / 2.);
+    //     UI::Text(playerRecordTimeStr);
+    //     UI::PopFont();
+    // }
+
+    UI::SetCursorPos(endPos);
+}
+
 
 Stats@ globalStats = Stats();
 Stats@[] campaignStats = {};
