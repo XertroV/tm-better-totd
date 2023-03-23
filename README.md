@@ -2,6 +2,17 @@
 
 A TOTD browser with info about your PBs and medals.
 
+Features:
+
+* View your medals by month, by campaign, or for all TOTDs.
+* Easily and quickly play any TOTD in Solo.
+* Filter TOTDs by date, medals, author name.
+* Instant PB loading, after TOTDs load.
+
+If a map appears to be stuck, you can trigger a reload by loading and exiting that map.
+
+Note: Instant PB loading is experimental, please report bugs. As a backup, your PBs are loaded from the game's API, too (takes about 5 min to full load all PBs).
+
 ### TODO
 
 - sort by # of ppl who have AT

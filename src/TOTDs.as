@@ -6,22 +6,47 @@ uint totalCampaigns = 0;
 bool logNewTOTDs = false;
 int64 newTotdAt = 0;
 
+const string TOTD_JSON_CACHE_FILE = IO::FromStorageFolder("totd.json");
+
 // spawns an infinite loop if it's sucessful
 void UpdateTotdInfo() {
     bool shouldUpdate = totdInfo is null || totdInfo.Get('nextRequestTimestamp', 0) <= Time::Stamp;
     if (shouldUpdate) {
+        if (totdInfo is null) startnew(LoadTotdFromCache);
         @totdInfo = Live::GetTotdByMonth();
-        startnew(UpdateTotdCacheData);
-        totalMonths = totdInfo['monthList'].Length;
-        totalCampaigns = (totalMonths - 1) / 3 + 1;
+        // immediately copy this string and save it
+        CacheTotdJson(_LastLiveEndpointRaw);
+        OnTotdJsonLoad();
     } else return;
     // 10% of a day default
     int64 waitSeconds = totdInfo.Get('relativeNextRequest', 8640);
     newTotdAt = Time::Stamp + waitSeconds;
     sleep(waitSeconds * 1000);
     startnew(UpdateTotdInfo);
-
 }
+
+void OnTotdJsonLoad() {
+    startnew(UpdateTotdCacheData);
+    totalMonths = totdInfo['monthList'].Length;
+    totalCampaigns = (totalMonths - 1) / 3 + 1;
+}
+
+void LoadTotdFromCache() {
+    if (totdInfo !is null) return;
+    if (IO::FileExists(TOTD_JSON_CACHE_FILE)) {
+        auto _totdsLast = Json::FromFile(TOTD_JSON_CACHE_FILE);
+        if (totdInfo !is null) return;
+        @totdInfo = _totdsLast;
+        OnTotdJsonLoad();
+    }
+}
+
+void CacheTotdJson(string _raw) {
+    IO::File totdCache(TOTD_JSON_CACHE_FILE, IO::FileMode::Write);
+    totdCache.Write(_raw);
+    totdCache.Close();
+}
+
 
 dictionary totdMaps;
 string[] totdUids;

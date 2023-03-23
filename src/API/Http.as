@@ -1,3 +1,5 @@
+string _LastLiveEndpointRaw;
+
 Json::Value@ FetchLiveEndpoint(const string &in route) {
     NadeoServices::AddAudience("NadeoLiveServices");
     while (!NadeoServices::IsAuthenticated("NadeoLiveServices")) yield();
@@ -6,7 +8,8 @@ Json::Value@ FetchLiveEndpoint(const string &in route) {
     auto req = NadeoServices::Get("NadeoLiveServices", route);
     req.Start();
     while(!req.Finished()) { yield(); }
-    return Json::Parse(req.String());
+    _LastLiveEndpointRaw = req.String();
+    return Json::Parse(_LastLiveEndpointRaw);
 }
 
 Json::Value@ FetchClubEndpoint(const string &in route) {
