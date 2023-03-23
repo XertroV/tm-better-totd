@@ -115,24 +115,13 @@ TagTypes[] TagsAlphabetical = {
     TagTypes::Zrt
 };
 
-array<Tag@> generateTags() {
+array<Tag@>@ generateTags() {
     array<Tag@> tags;
     for (int i = 1; i <= NUM_TAGS; i++){
         tags.InsertLast(Tag(TagTypes(i), true));
     }
     setAllTags(tags, true);
     return tags;
-}
-
-const string toTagString(array<Tag@>& tags){
-    string s;
-    for (int i = 0; i < NUM_TAGS; i++){
-        if(tags[i].checked){
-            int n = tags[i].type;
-            s += (i > 0 ? "," : "") + tostring(n);
-        }
-    }
-    return s;
 }
 
 void setAllTags(array<Tag@>& tags, bool val) {
@@ -143,7 +132,7 @@ void setAllTags(array<Tag@>& tags, bool val) {
     g_TrackTagsSetToAny = true;
 }
 
-array<Tag@> tags = generateTags();
+array<Tag@>@ tags = generateTags();
 
 void TagsSelectWindowInner() {
     // if (UI::Button("Defaults")) setAllTagsToDefault(tags);
@@ -154,7 +143,7 @@ void TagsSelectWindowInner() {
     UI::SameLine();
     bool changed = g_TrackTagsModeExclusive;
     g_TrackTagsModeExclusive = UI::Checkbox("Exclusive Selection?", g_TrackTagsModeExclusive);
-    AddSimpleTooltip("Exclusive mode: tracks must have ALL of the selected tags.\nInclusive mode: tracks must have ONE of the selected tags.\nSelecting all or zero tracks searches for 'any'.");
+    AddSimpleTooltip("Exclusive mode: ALL of a track's tags must be selected.\nInclusive mode: ONE of a track's tags must be selected.\nSelecting all or zero tracks searches for 'any'.");
     if (changed != g_TrackTagsModeExclusive) UpdateTagsCachedValues();
     DrawTagsCheckboxes(tags);
     UI::Separator();
@@ -219,4 +208,21 @@ void DrawTagsSearchDescription() {
         }
     }
     UI::TextWrapped(sFor);
+}
+
+bool TrackMatchesTagsFilters(TmxMapInfo@ info) {
+    if (g_TrackTagsSetToAny) return true;
+    if (info is null || info.TagList.Length == 0) return false;
+    if (g_TrackTagsModeExclusive) {
+        for (uint i = 0; i < info.TagList.Length; i++) {
+            if (!tags[info.TagList[i] - 1].checked) return false;
+        }
+        return true;
+    } else {
+        for (uint i = 0; i < info.TagList.Length; i++) {
+            if (tags[info.TagList[i] - 1].checked) return true;
+        }
+        return false;
+    }
+    return false;
 }

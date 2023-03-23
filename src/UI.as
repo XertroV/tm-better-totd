@@ -408,29 +408,6 @@ void DrawTotdFilters() {
     }
 }
 
-bool TrackMatchesTagsFilters(TmxMapInfo@ info) {
-    if (g_TrackTagsSetToAny) return true;
-    if (info is null) return false;
-    if (g_TrackTagsModeExclusive) {
-        for (uint i = 0; i < tags.Length; i++) {
-            if (!tags[i].checked) {
-                if (info.TagList.Find(tags[i].type) >= 0) return false;
-            } else {
-                if (info.TagList.Find(tags[i].type) < 0) return false;
-            }
-        }
-        // true fall through
-    } else {
-        for (uint i = 0; i < tags.Length; i++) {
-            if (tags[i].checked) {
-                if (info.TagList.Find(tags[i].type) >= 0) return true;
-            }
-        }
-        return false;
-    }
-    return true;
-}
-
 string[]@ f_authorParts;
 void PrepAuthorFilter() {
     if (f_Author.Length == 0) return;
