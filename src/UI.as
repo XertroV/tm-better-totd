@@ -346,9 +346,6 @@ void DrawTotdFilters() {
         UI::TableSetupColumn("rhs", UI::TableColumnFlags::WidthStretch);
         UI::TableNextColumn();
         UI::TableNextColumn();
-        UI::AlignTextToFramePadding();
-        UI::Text("("+nbFilteredTracks+" Tracks)");
-        UI::SameLine();
         if (UI::Button(Icons::Times)) {
             ResetFilters();
         }
@@ -365,9 +362,12 @@ void DrawTotdFilters() {
         UI::SameLine();
         UI::SetNextItemWidth(55);
         f_HaveMedals = UI::FilterMedals("Have", f_HaveMedals, changed);
-        UI::SameLine();
-        f_ExcludeTroll = UI::FilterBool("No Troll", f_ExcludeTroll, changed);
         // UI::SameLine();
+        // todo: second table to center a new row
+        UI::AlignTextToFramePadding();
+        UI::Text("("+nbFilteredTracks+" Tracks)");
+        UI::SameLine();
+
         UI::SetNextItemWidth(80);
         f_TrackName = UI::FilterString("Name", f_TrackName, changed);
         AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
@@ -375,9 +375,12 @@ void DrawTotdFilters() {
         UI::SetNextItemWidth(80);
         f_Author = UI::FilterString("Author", f_Author, changed);
         AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
+        UI::SameLine();
         if (UI::Button(TrackStylesBtnText())) {
             g_OpenTrackStyles = true;
         }
+        UI::SameLine();
+        f_ExcludeTroll = UI::FilterBool("No Troll", f_ExcludeTroll, changed);
 
         UI::EndTable();
     }
@@ -400,8 +403,32 @@ void DrawTotdFilters() {
         if (f_ExcludeTroll && map.IsLikelyTroll) continue;
         if (f_Author.Length > 0 && !MatchAuthorSearchString(map.author)) continue;
         if (f_TrackName.Length > 0 && !MatchNameSearchString(map.cleanName)) continue;
+        if (!TrackMatchesTagsFilters(map.GetTmxInfo())) continue;
         filteredTotds.InsertLast(map);
     }
+}
+
+bool TrackMatchesTagsFilters(TmxMapInfo@ info) {
+    if (g_TrackTagsSetToAny) return true;
+    if (info is null) return false;
+    if (g_TrackTagsModeExclusive) {
+        for (uint i = 0; i < tags.Length; i++) {
+            if (!tags[i].checked) {
+                if (info.TagList.Find(tags[i].type) >= 0) return false;
+            } else {
+                if (info.TagList.Find(tags[i].type) < 0) return false;
+            }
+        }
+        // true fall through
+    } else {
+        for (uint i = 0; i < tags.Length; i++) {
+            if (tags[i].checked) {
+                if (info.TagList.Find(tags[i].type) >= 0) return true;
+            }
+        }
+        return false;
+    }
+    return true;
 }
 
 string[]@ f_authorParts;
@@ -487,7 +514,7 @@ namespace UI {
 bool g_OpenTrackStyles = false;
 
 const string TrackStylesBtnText() {
-    return g_TrackTagsSetToAny ? "Tags" : "Tags*";
+    return g_TrackTagsSetToAny ? "TMX Tags" : "TMX Tags*";
 }
 
 void RenderTrackStylesWindow() {

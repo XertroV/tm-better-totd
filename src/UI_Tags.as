@@ -65,6 +65,56 @@ enum TagTypes {
     Zrt = 11
 }
 
+TagTypes[] TagsAlphabetical = {
+    TagTypes::Arena,
+    TagTypes::Backwards,
+    TagTypes::Bobsleigh,
+    TagTypes::Bumper,
+    TagTypes::Competitive,
+    TagTypes::Dirt,
+    TagTypes::Educational,
+    TagTypes::Endurance,
+    TagTypes::FlagRush,
+    TagTypes::Fragile,
+    TagTypes::Freestyle,
+    TagTypes::Freewheel,
+    TagTypes::FullSpeed,
+    TagTypes::Grass,
+    TagTypes::Ice,
+    TagTypes::Kacky,
+    TagTypes::Lol,
+    TagTypes::Mini,
+    TagTypes::Minigame,
+    TagTypes::Mixed,
+    TagTypes::MultiLap,
+    TagTypes::Nascar,
+    TagTypes::Obstacle,
+    TagTypes::Offroad,
+    TagTypes::Pathfinding,
+    TagTypes::Plastic,
+    TagTypes::Platform,
+    TagTypes::PressForward,
+    TagTypes::Puzzle,
+    TagTypes::Race,
+    TagTypes::Refactor,
+    TagTypes::Remake,
+    TagTypes::Royal,
+    TagTypes::Rpg,
+    TagTypes::Sausage,
+    TagTypes::Scenery,
+    TagTypes::Signature,
+    TagTypes::SlowMotion,
+    TagTypes::SpeedDrift,
+    TagTypes::SpeedFun,
+    TagTypes::SpeedTech,
+    TagTypes::Stunt,
+    TagTypes::Tech,
+    TagTypes::Transitional,
+    TagTypes::Trial,
+    TagTypes::Water,
+    TagTypes::Zrt
+};
+
 array<Tag@> generateTags() {
     array<Tag@> tags;
     for (int i = 1; i <= NUM_TAGS; i++){
@@ -116,7 +166,8 @@ void DrawTagsCheckboxes(array<Tag@>& tags) {
     if (UI::BeginTable("tags", 6, UI::TableFlags::SizingFixedFit)) {
         UI::AlignTextToFramePadding();
         // UI::Columns(6);
-        for (uint i = 0; i < tags.Length; i++) {
+        for (uint ti = 0; ti < TagsAlphabetical.Length; ti++) {
+            int i = TagsAlphabetical[ti] - 1;
             UI::TableNextColumn();
             bool changed = tags[i].checked;
             tags[i].checked = UI::Checkbox(tostring(tags[i].type), tags[i].checked);
