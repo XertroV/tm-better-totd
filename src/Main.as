@@ -56,6 +56,8 @@ void RenderMenu() {
 /** Render function called every frame.
 */
 void RenderInterface() {
+    RenderTrackStylesWindow();
+
     if (!UserHasPermissions) return;
     // if (!ShowWindow || CurrentlyInMap || GetApp().Editor !is null) return;
     if (!ShowWindow) return;

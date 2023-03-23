@@ -193,6 +193,7 @@ class LazyMap {
 
     bool MapInfoLoaded = false;
     string name = "??";
+    string cleanName = "??";
     string author = "??";
     string authorTime = "??";
     string goldTime;
@@ -224,6 +225,7 @@ class LazyMap {
         }
 
         name = ColoredString(map.Name);
+        cleanName = StripFormatCodes(map.Name);
         author = map.AuthorDisplayName;
         authorTime = Time::Format(map.AuthorScore);
         goldTime = Time::Format(map.GoldScore);
@@ -315,6 +317,12 @@ class LazyMap {
         if (UI::Button(TM_IO_ICON)) {
             OpenBrowserURL('https://trackmania.io/#/leaderboard/' + uid);
         }
+        UI::SameLine();
+        UI::BeginDisabled(GetTmxInfo() is null);
+        if (UI::Button("TMX")) {
+            TMX::OpenTmxTrack(tmxInfo.TrackID);
+        }
+        UI::EndDisabled();
         // UI::SameLine();
         // if (UI::Button("TMX")) {
         //     // todo
@@ -436,6 +444,14 @@ class LazyMap {
         else btnCol = vec4(.3, .3, .3, .9);
         btnColHov = vec4(Math::Pow(btnCol.xyz, 0.75), btnCol.w);
         btnColAct = vec4(Math::Pow(btnCol.xyz, 1.5), btnCol.w);
+    }
+
+    TmxMapInfo@ tmxInfo = null;
+    TmxMapInfo@ GetTmxInfo() {
+        if (tmxInfo !is null) return tmxInfo;
+        if (tmxDb.Exists(uid))
+            @tmxInfo = tmxDb.Get(uid);
+        return tmxInfo;
     }
 
     // UI::Texture@ tex;

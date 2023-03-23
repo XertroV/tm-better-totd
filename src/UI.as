@@ -314,6 +314,7 @@ void DrawTotdTableInner() {
 LazyMap@[]@ filteredTotds = null;
 
 string f_Author;
+string f_TrackName;
 int f_AfterMonth = -1;
 int f_BeforeMonth = -1;
 int f_MissingMedals = -1;
@@ -322,6 +323,7 @@ bool f_ExcludeTroll = false;
 
 void ResetFilters() {
     f_Author = "";
+    f_TrackName = "";
     f_AfterMonth = -1;
     f_BeforeMonth = -1;
     f_MissingMedals = -1;
@@ -345,7 +347,7 @@ void DrawTotdFilters() {
         UI::TableNextColumn();
         UI::TableNextColumn();
         UI::AlignTextToFramePadding();
-        UI::Text("("+nbFilteredTracks+")");
+        UI::Text("("+nbFilteredTracks+" Tracks)");
         UI::SameLine();
         if (UI::Button(Icons::Times)) {
             ResetFilters();
@@ -365,10 +367,17 @@ void DrawTotdFilters() {
         f_HaveMedals = UI::FilterMedals("Have", f_HaveMedals, changed);
         UI::SameLine();
         f_ExcludeTroll = UI::FilterBool("No Troll", f_ExcludeTroll, changed);
+        // UI::SameLine();
+        UI::SetNextItemWidth(80);
+        f_TrackName = UI::FilterString("Name", f_TrackName, changed);
+        AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
         UI::SameLine();
         UI::SetNextItemWidth(80);
         f_Author = UI::FilterString("Author", f_Author, changed);
         AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
+        if (UI::Button(TrackStylesBtnText())) {
+            g_OpenTrackStyles = true;
+        }
 
         UI::EndTable();
     }
@@ -379,6 +388,7 @@ void DrawTotdFilters() {
     log_trace("Updating TOTD filtered list");
 
     PrepAuthorFilter();
+    PrepNameFilter();
 
     @filteredTotds = array<LazyMap@>();
     for (uint i = 0; i < allTotds.Length; i++) {
@@ -389,6 +399,7 @@ void DrawTotdFilters() {
         if (f_HaveMedals >= 0 && map.playerMedal > f_HaveMedals) continue;
         if (f_ExcludeTroll && map.IsLikelyTroll) continue;
         if (f_Author.Length > 0 && !MatchAuthorSearchString(map.author)) continue;
+        if (f_TrackName.Length > 0 && !MatchNameSearchString(map.cleanName)) continue;
         filteredTotds.InsertLast(map);
     }
 }
@@ -397,6 +408,11 @@ string[]@ f_authorParts;
 void PrepAuthorFilter() {
     if (f_Author.Length == 0) return;
     @f_authorParts = f_Author.ToLower().Split("*");
+}
+string[]@ f_nameParts;
+void PrepNameFilter() {
+    if (f_TrackName.Length == 0) return;
+    @f_nameParts = f_TrackName.ToLower().Split("*");
 }
 
 bool MatchAuthorSearchString(const string &in author) {
@@ -413,6 +429,20 @@ bool MatchAuthorSearchString(const string &in author) {
     }
     return true;
 }
+
+bool MatchNameSearchString(const string &in name) {
+    if (f_nameParts.Length == 0) return true;
+    int lastIx = 0;
+    for (uint i = 0; i < f_nameParts.Length; i++) {
+        if (f_nameParts[i].Length == 0) continue;
+        auto ix = name.SubStr(lastIx).IndexOfI(f_nameParts[i]) + lastIx;
+        if (ix < lastIx) return false;
+        lastIx = ix + f_nameParts[i].Length;
+    }
+    return true;
+}
+
+
 
 namespace UI {
     int FilterMonth(const string &in label, int val, bool &out changed) {
@@ -452,4 +482,18 @@ namespace UI {
         if (changed) g_FilteresChanged = true;
         return ret;
     }
+}
+
+bool g_OpenTrackStyles = false;
+
+const string TrackStylesBtnText() {
+    return g_TrackTagsSetToAny ? "Tags" : "Tags*";
+}
+
+void RenderTrackStylesWindow() {
+    if (!g_OpenTrackStyles) return;
+    if (UI::Begin(MenuTitle + ": Filter TOTD Tags (TMX Only)", g_OpenTrackStyles, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
+        TagsSelectWindowInner();
+    }
+    UI::End();
 }
