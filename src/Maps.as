@@ -1,12 +1,12 @@
 void LoadMapNowWrapper(const string &in url) {
- // #if DEPENDENCY_ARCHIVIST || DEPENDENCY_ARCHIVIST_DEV
+#if DEPENDENCY_ARCHIVIST
     if (S_LoadInArchivist) {
         try {
             Archivist::LoadMapFromUrlNow(url);
             return;
         } catch {}
     }
- // #endif
+#endif
     LoadMapNow(url);
 }
 
