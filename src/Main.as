@@ -11,19 +11,6 @@ void Main() {
     startnew(ClearTaskCoro);
     startnew(WatchForMapChange);
     startnew(WatchStaleStatsCache);
-
-#if DEPENDENCY_ARCHIVIST
-    print("DEPENDENCY_ARCHIVIST");
-#endif
-#if DEPENDENCY_ARCHIVISTDEV
-    print("DEPENDENCY_ARCHIVISTDEV");
-#endif
-#if DEPENDENCY_ARCHIVIST_DEV
-    print("DEPENDENCY_ARCHIVIST_DEV");
-#endif
-#if DEPENDENCY_ARCHIVIST-DEV
-    print("DEPENDENCY_ARCHIVIST-DEV");
-#endif
 }
 
 void OnDestroyed() { Unload(); }

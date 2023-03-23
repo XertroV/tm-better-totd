@@ -42,6 +42,11 @@ void DrawHomeStats() {
         UI::EndTabItem();
     }
 
+    // if (UI::BeginTabItem("About", UI::TabItemFlags::Trailing)) {
+    //     UI::Text("Test");
+    //     UI::EndTabItem();
+    // }
+
     UI::EndTabBar();
     g_SelectStatsTab = "";
 }
@@ -402,7 +407,7 @@ bool MatchAuthorSearchString(const string &in author) {
         // if (!author.Contains(f_authorParts[i])) return false;
         // this way should match order
         if (f_authorParts[i].Length == 0) continue;
-        auto ix = author.IndexOfI(f_authorParts[i]);
+        auto ix = author.SubStr(lastIx).IndexOfI(f_authorParts[i]) + lastIx;
         if (ix < lastIx) return false;
         lastIx = ix + f_authorParts[i].Length;
     }

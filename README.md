@@ -4,7 +4,8 @@ A TOTD browser with info about your PBs and medals.
 
 ### TODO
 
-- archivist option / integration
+- sort by # of ppl who have AT
+- integration with author-tracker
 
 License: Public Domain
 
