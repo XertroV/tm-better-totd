@@ -15,7 +15,7 @@ uint _unitTests_nPassed = 0;
 uint _unitTests_startedAt = 0;
 bool unitTestsStarted = UnitTest_StartMainLoop();
 
-bool RegisterUnitTest(const string &in name, CoroutineFunc@ &in func) {
+bool RegisterUnitTest(const string &in name, CoroutineFunc@ func) {
   if (_unitTests_startedAt == 0) {
     while (_unitTests_globalSingleton is null) {
       yield();

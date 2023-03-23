@@ -1,20 +1,25 @@
 Json::Value@ totdInfo = null;
 bool g_doneTotdInfoInitialLoad = false;
+DictOfTrackOfTheDayEntry_WriteLog@ totdDb = DictOfTrackOfTheDayEntry_WriteLog(IO::FromStorageFolder(""), "totd.db");
 
 uint totalMonths = 0;
 uint totalCampaigns = 0;
 
 bool logNewTOTDs = false;
 int64 newTotdAt = 0;
+int nbTotdReqs = 0;
 
 const string TOTD_JSON_CACHE_FILE = IO::FromStorageFolder("totd.json");
+
 
 // spawns an infinite loop if it's sucessful
 void UpdateTotdInfo() {
     bool shouldUpdate = totdInfo is null || totdInfo.Get('nextRequestTimestamp', 0) <= Time::Stamp;
     if (shouldUpdate) {
         if (totdInfo is null) startnew(LoadTotdFromCache);
+        nbTotdReqs += 1;
         @totdInfo = Live::GetTotdByMonth();
+        nbTotdReqs -= 1;
         // immediately copy this string and save it
         CacheTotdJson(_LastLiveEndpointRaw);
         OnTotdJsonLoad();
@@ -83,6 +88,8 @@ void UpdateTotdCacheData() {
     // }
 }
 
+int nbMapInfoRequests = 0;
+
 void PopulateMapInfos() {
     int total = allTotds.Length;
     int _ix = 0;
@@ -94,7 +101,9 @@ void PopulateMapInfos() {
             uids.Add(allTotds[i].uid);
         }
         _ix = i;
+        nbMapInfoRequests += uids.Length;
         auto mapInfos = GetMapsFromUids(uids);
+        nbMapInfoRequests -= uids.Length;
         for (uint j = 0; j < mapInfos.Length; j++) {
             auto mi = mapInfos[j];
             auto lm = cast<LazyMap>(totdMaps[mi.Uid]);
@@ -155,6 +164,7 @@ void RateLimit() {
 }
 */
 
+int nbPlayerRecordReqs = 0;
 
 class LazyMap {
     string uid;
@@ -195,6 +205,7 @@ class LazyMap {
     string name = "??";
     string cleanName = "??";
     string author = "??";
+    string authorByLine = "??";
     string authorTime = "??";
     string goldTime;
     string silverTime;
@@ -227,6 +238,7 @@ class LazyMap {
         name = ColoredString(map.Name);
         cleanName = StripFormatCodes(map.Name);
         author = map.AuthorDisplayName;
+        authorByLine = "\\$888by \\$z" + author;
         authorTime = Time::Format(map.AuthorScore);
         goldTime = Time::Format(map.GoldScore);
         silverTime = Time::Format(map.SilverScore);
@@ -252,8 +264,10 @@ class LazyMap {
     }
 
     void LoadRecordFromAPI() {
+        nbPlayerRecordReqs += 1;
         RateLimit();
         auto rec = GetPlayerRecordOnMap(uid);
+        nbPlayerRecordReqs -= 1;
         bool timeChanged = false;
         if (rec !is null) {
             timeChanged = playerRecordTime != int(rec.Time);
@@ -300,7 +314,7 @@ class LazyMap {
         UI::TableNextColumn();
         UI::Text(name);
         UI::TableNextColumn();
-        UI::Text(author);
+        UI::Text(authorByLine);
         UI::TableNextColumn();
         UI::Text(playerMedalLabel);
         UI::TableNextColumn();

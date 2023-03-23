@@ -33,17 +33,22 @@ void ScanForMissingTmx() {
     }
 }
 
+int nbTmxReqs = 0;
+
 void CacheTmxInfoFor(string[] &in allUids) {
     log_trace("Syncing " + allUids.Length + " maps via TMX");
+    nbTmxReqs += allUids.Length;
     string[] uids = {};
     for (uint i = 0; i < allUids.Length; i++) {
         uids.InsertLast(allUids[i]);
         if (uids.Length >= 5) {
             CacheTmxInfoForChunk(uids);
+            nbTmxReqs -= uids.Length;
             uids.RemoveRange(0, uids.Length);
         }
     }
     if (uids.Length > 0) CacheTmxInfoForChunk(uids);
+    nbTmxReqs -= uids.Length;
 }
 
 void CacheTmxInfoForChunk(string[] &in uids) {

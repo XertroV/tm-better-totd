@@ -42,10 +42,10 @@ void DrawHomeStats() {
         UI::EndTabItem();
     }
 
-    // if (UI::BeginTabItem("About", UI::TabItemFlags::Trailing)) {
-    //     UI::Text("Test");
-    //     UI::EndTabItem();
-    // }
+    if (UI::BeginTabItem("About", UI::TabItemFlags::Trailing)) {
+        DrawAboutTabInner();
+        UI::EndTabItem();
+    }
 
     UI::EndTabBar();
     g_SelectStatsTab = "";
@@ -144,13 +144,15 @@ void DrawCampaignRowMonthRow(uint mIx) {
 
 
 
-int g_SelectedCampaign = 0;
+[Setting hidden]
+int g_SelectedCampaign = -1;
 void DrawStatsByCampaign() {
     bool changed;
     if (campaignStats.Length == 0) {
         UI::Text("No stats yet...");
         return;
     }
+    if (g_SelectedCampaign == -1) g_SelectedCampaign = campaignStats.Length - 1;
     g_SelectedCampaign = DrawPaginationBar(CampaignStr(g_SelectedCampaign), g_SelectedCampaign, 0, campaignStats.Length - 1, changed);
     if (g_SelectedCampaign >= int(campaignStats.Length) || campaignStats[g_SelectedCampaign] is null) {
         UI::Text("Stats not accessible; index (" + g_SelectedCampaign + ") outside range or stats are null.");
@@ -169,13 +171,15 @@ void DrawStatsByCampaign() {
     UI::EndChild();
 }
 
-int g_SelectedMonth = 0;
+[Setting hidden]
+int g_SelectedMonth = -1;
 void DrawStatsByMonth() {
     bool changed;
     if (monthStats.Length == 0) {
         UI::Text("No stats yet...");
         return;
     }
+    if (g_SelectedMonth == -1) g_SelectedMonth = monthStats.Length - 1;
     g_SelectedMonth = DrawPaginationBar(MonthStr(g_SelectedMonth), g_SelectedMonth, 0, monthStats.Length - 1, changed);
     if (g_SelectedMonth >= int(monthStats.Length) || monthStats[g_SelectedMonth] is null) {
         UI::Text("Stats not accessible; index (" + g_SelectedMonth + ") outside range or stats are null.");
@@ -330,6 +334,7 @@ void ResetFilters() {
     f_HaveMedals = -1;
     f_ExcludeTroll = false;
     g_FilteresChanged = true;
+    setAllTags(tags, true);
 }
 
 bool g_FilteresChanged = false;

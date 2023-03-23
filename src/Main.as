@@ -37,6 +37,7 @@ void NotifyWarning(const string &in msg) {
 
 const string PluginIcon = Icons::CalendarCheckO;
 const string MenuTitle = "\\$3bf" + PluginIcon + "\\$z " + Meta::ExecutingPlugin().Name;
+const string FullWindowTitle = MenuTitle + "\\$888   by XertroV";
 
 const string TM_IO_ICON = "\\$3af" + Icons::Heartbeat;
 
@@ -66,7 +67,7 @@ void RenderInterface() {
     UI::SetNextWindowSize(int(size.x), int(size.y), UI::Cond::FirstUseEver);
     UI::SetNextWindowPos(int(pos.x), int(pos.y), UI::Cond::FirstUseEver);
     UI::PushStyleColor(UI::Col::FrameBg, vec4(.2, .2, .2, .5));
-    if (UI::Begin(MenuTitle + "\\$888   by XertroV", ShowWindow)) {
+    if (UI::Begin(FullWindowTitle, ShowWindow)) {
         RenderMainWindowInner();
     }
     UI::End();
