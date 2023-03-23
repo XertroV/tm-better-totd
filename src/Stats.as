@@ -190,7 +190,7 @@ class Stats {
         }
         auto map1 = maps[0];
         int calStartOff = map1.weekDay;
-        auto width = UI::GetContentRegionMax().x;
+        auto width = UI::GetWindowContentRegionWidth();
         auto fp = UI::GetStyleVarVec2(UI::StyleVar::FramePadding);
         auto colWidth = width / 8.;
         float tableWidth = width / 8. * 7.;
