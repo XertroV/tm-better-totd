@@ -1,4 +1,5 @@
 Json::Value@ totdInfo = null;
+bool g_doneTotdInfoInitialLoad = false;
 
 uint totalMonths = 0;
 uint totalCampaigns = 0;
@@ -17,6 +18,7 @@ void UpdateTotdInfo() {
         // immediately copy this string and save it
         CacheTotdJson(_LastLiveEndpointRaw);
         OnTotdJsonLoad();
+        g_doneTotdInfoInitialLoad = true;
     } else return;
     // 10% of a day default
     int64 waitSeconds = totdInfo.Get('relativeNextRequest', 8640);

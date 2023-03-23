@@ -9,5 +9,5 @@ siteid   = 352
 #__DEFINES__
 dependencies = ["NadeoServices"]
 optional_dependencies = ["Archivist"]
-
 # exports = ["Exports_BetterTotd.as"]
+#defines = ["UNIT_TEST"]
