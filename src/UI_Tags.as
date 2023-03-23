@@ -128,7 +128,7 @@ void setAllTags(array<Tag@>& tags, bool val) {
     for (int i = 0; i < NUM_TAGS; i++) {
         tags[i].setChecked(val);
     }
-    g_FilteresChanged = true;
+    g_FiltersChanged = true;
     g_TrackTagsSetToAny = true;
 }
 
@@ -169,7 +169,7 @@ void DrawTagsCheckboxes(array<Tag@>& tags) {
 }
 
 void UpdateTagsCachedValues() {
-    g_FilteresChanged = true;
+    g_FiltersChanged = true;
     g_TrackTagsSetToAny = true;
     bool expected = tags[0].checked;
     for (uint i = 1; i < tags.Length; i++) {
@@ -224,5 +224,4 @@ bool TrackMatchesTagsFilters(TmxMapInfo@ info) {
         }
         return false;
     }
-    return false;
 }

@@ -1,3 +1,12 @@
+void DrawAboutTabOuter() {
+    auto totalReqs = nbTotdReqs + nbMapInfoRequests + nbPlayerRecordReqs + nbTmxReqs;
+    auto label = totalReqs == 0 ? "About###about-tab" : ("About (" + HourGlassAnim() + " " + totalReqs + ")###about-tab");
+    if (UI::BeginTabItem(label, UI::TabItemFlags::Trailing)) {
+        DrawAboutTabInner();
+        UI::EndTabItem();
+    }
+}
+
 void DrawAboutTabInner() {
     UI::FullWidthCentered("MainTitle", About::MainTitle);
     UI::FullWidthCentered("VersionLineInfo", About::VersionLineInfo);

@@ -22,6 +22,11 @@ Note: Instant PB loading is experimental, please report bugs. As a backup, your 
 - add sorting to TOTD table
 - ~~styles via TMX~~
 
+### TEST
+
+- Autoload settings on new TOTD
+- Getting fresh TOTDs new system
+
 License: Public Domain
 
 Authors: XertroV

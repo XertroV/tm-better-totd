@@ -1,9 +1,7 @@
 const string TMX_DB_PATH = IO::FromStorageFolder("tmx.db");
-DictOfTmxMapInfo_WriteLog@ tmxDb = null;
+DictOfTmxMapInfo_WriteLog@ tmxDb = DictOfTmxMapInfo_WriteLog(IO::FromStorageFolder(""), "tmx.db");
 
 void LoadTmxDB() {
-    if (tmxDb !is null) return;
-    @tmxDb = DictOfTmxMapInfo_WriteLog(IO::FromStorageFolder(""), "tmx.db");
     tmxDb.AwaitInitialized();
 }
 
@@ -12,10 +10,6 @@ void ScanForMissingTmx() {
     if (tmxScanStarted) return;
     tmxScanStarted = true;
     LoadTmxDB();
-
-    while (tmxDb is null) yield();
-    while (!g_doneTotdInfoInitialLoad) yield();
-    yield();
 
     uint lastNbTracks = 0;
     while (true) {

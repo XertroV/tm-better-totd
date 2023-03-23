@@ -19,7 +19,7 @@ void WatchStaleStatsCache() {
 }
 
 void RecalcTotdStats() {
-    @globalStats = Stats();
+    globalStats.Reset();
     campaignStats.Resize(totalCampaigns);
     monthStats.Resize(totalMonths);
     for (uint i = 0; i < campaignStats.Length; i++) {
@@ -30,13 +30,18 @@ void RecalcTotdStats() {
         if (monthStats[i] is null) @monthStats[i] = Stats();
         else monthStats[i].Reset();
     }
+    // pause if the window isn't visible
+    bool doPauses = !ShowWindow || !UI::IsOverlayShown();
+    if (doPauses) yield();
     for (uint i = 0; i < allTotds.Length; i++) {
         auto lm = allTotds[i];
         globalStats.CountLazyMap(lm);
         campaignStats[lm.campaignIx].CountLazyMap(lm);
         monthStats[lm.monthIx].CountLazyMap(lm);
+        if (doPauses && i % 100 == 0) yield();
     }
-    g_FilteresChanged = true;
+    if (doPauses) yield();
+    g_FiltersChanged = true;
     // ! testing
     // for (uint i = monthStats.Length - 1; i < monthStats.Length; i--) {
     //     if (monthStats[i].nbTracks == 0) monthStats.RemoveLast();

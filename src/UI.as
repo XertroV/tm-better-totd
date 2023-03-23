@@ -8,7 +8,7 @@ void RenderMainWindowInner() {
         UI::Text("Missing permissions.");
         return;
     }
-    if (totdInfo is null) {
+    if (!totdDb.Initialized) {
         UI::Text("TOTD Info Loading...");
         return;
     }
@@ -42,10 +42,7 @@ void DrawHomeStats() {
         UI::EndTabItem();
     }
 
-    if (UI::BeginTabItem("About", UI::TabItemFlags::Trailing)) {
-        DrawAboutTabInner();
-        UI::EndTabItem();
-    }
+    DrawAboutTabOuter();
 
     UI::EndTabBar();
     g_SelectStatsTab = "";
@@ -66,7 +63,7 @@ void DrawOverviewStats() {
             UI::TableSetupColumn("play-campgn");
             while (clip.Step()) {
                 for (int i = clip.DisplayStart; i < clip.DisplayEnd; i++) {
-                    DrawCampaignOverview(i);
+                    DrawCampaignOverview(totalCampaigns - 1 - i);
                 }
             }
             UI::EndTable();
@@ -114,9 +111,9 @@ void DrawCampaignRowMonthsInner(int cIx) {
         UI::TableSetupColumn("btn", UI::TableColumnFlags::WidthFixed);
 
         int monthIx = cIx * 3;
-        DrawCampaignRowMonthRow(monthIx);
-        DrawCampaignRowMonthRow(monthIx + 1);
         DrawCampaignRowMonthRow(monthIx + 2);
+        DrawCampaignRowMonthRow(monthIx + 1);
+        DrawCampaignRowMonthRow(monthIx);
 
         UI::EndTable();
     }
@@ -333,66 +330,21 @@ void ResetFilters() {
     f_MissingMedals = -1;
     f_HaveMedals = -1;
     f_ExcludeTroll = false;
-    g_FilteresChanged = true;
+    g_FiltersChanged = true;
     setAllTags(tags, true);
 }
 
-bool g_FilteresChanged = false;
-
+bool g_FiltersChanged = false;
+float widthScale = 1;
 // this initializes `filteredTotds`
 void DrawTotdFilters() {
-    UI::PushID("totd filters");
-    uint nbFilteredTracks = filteredTotds is null ? 0 : filteredTotds.Length;
-    if (UI::BeginTable("filters", 3, UI::TableFlags::SizingFixedFit)) {
-        // this is broken
-        bool changed = false;
-        UI::TableSetupColumn("lhs", UI::TableColumnFlags::WidthStretch);
-        UI::TableSetupColumn("fs");
-        UI::TableSetupColumn("rhs", UI::TableColumnFlags::WidthStretch);
-        UI::TableNextColumn();
-        UI::TableNextColumn();
-        if (UI::Button(Icons::Times)) {
-            ResetFilters();
-        }
-        AddSimpleTooltip("Reset Filters");
-        UI::SameLine();
-        UI::SetNextItemWidth(100);
-        f_AfterMonth = UI::FilterMonth("After", f_AfterMonth, changed);
-        UI::SameLine();
-        UI::SetNextItemWidth(100);
-        f_BeforeMonth = UI::FilterMonth("Before", f_BeforeMonth, changed);
-        UI::SameLine();
-        UI::SetNextItemWidth(55);
-        f_MissingMedals = UI::FilterMedals("Missing", f_MissingMedals, changed);
-        UI::SameLine();
-        UI::SetNextItemWidth(55);
-        f_HaveMedals = UI::FilterMedals("Have", f_HaveMedals, changed);
-        // UI::SameLine();
-        // todo: second table to center a new row
-        UI::AlignTextToFramePadding();
-        UI::Text("("+nbFilteredTracks+" Tracks)");
-        UI::SameLine();
+    widthScale = UI::GetTextLineHeight() * 6.3 / 100.;
+    UI::FullWidthCentered("totd filters 1", FiltersTopRow);
+    UI::FullWidthCentered("totd filters 2", FiltersMidRow);
+    UI::FullWidthCentered("totd filters 3", FiltersThirdRow);
 
-        UI::SetNextItemWidth(80);
-        f_TrackName = UI::FilterString("Name", f_TrackName, changed);
-        AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
-        UI::SameLine();
-        UI::SetNextItemWidth(80);
-        f_Author = UI::FilterString("Author", f_Author, changed);
-        AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
-        UI::SameLine();
-        if (UI::Button(TrackStylesBtnText())) {
-            g_OpenTrackStyles = true;
-        }
-        UI::SameLine();
-        f_ExcludeTroll = UI::FilterBool("No Troll", f_ExcludeTroll, changed);
-
-        UI::EndTable();
-    }
-
-    UI::PopID();
-    if (filteredTotds !is null && !g_FilteresChanged) return;
-    g_FilteresChanged = false;
+    if (filteredTotds !is null && !g_FiltersChanged) return;
+    g_FiltersChanged = false;
     log_trace("Updating TOTD filtered list");
 
     PrepAuthorFilter();
@@ -410,6 +362,69 @@ void DrawTotdFilters() {
         if (f_TrackName.Length > 0 && !MatchNameSearchString(map.cleanName)) continue;
         if (!TrackMatchesTagsFilters(map.GetTmxInfo())) continue;
         filteredTotds.InsertLast(map);
+    }
+    totdsQuicksort(filteredTotds, f_SortMethod < sortMethods.Length ? sortMethods[f_SortMethod] : Less_NewFirst);
+}
+
+void FiltersTopRow() {
+    // changed does nothing, relic of broken attempt
+    bool changed;
+    UI::SetNextItemWidth(widthScale * 100);
+    f_AfterMonth = UI::FilterMonth("After", f_AfterMonth, changed);
+    UI::SameLine();
+    UI::SetNextItemWidth(widthScale * 100);
+    f_BeforeMonth = UI::FilterMonth("Before", f_BeforeMonth, changed);
+    UI::SameLine();
+    UI::SetNextItemWidth(widthScale * 55);
+    f_MissingMedals = UI::FilterMedals("Missing", f_MissingMedals, changed);
+    UI::SameLine();
+    UI::SetNextItemWidth(widthScale * 55);
+    f_HaveMedals = UI::FilterMedals("Have", f_HaveMedals, changed);
+}
+
+void FiltersMidRow() {
+    // changed does nothing, relic of broken attempt
+    bool changed;
+    UI::SetNextItemWidth(widthScale * 80);
+    f_TrackName = UI::FilterString("Name", f_TrackName, changed);
+    AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
+    UI::SameLine();
+    UI::SetNextItemWidth(widthScale * 80);
+    f_Author = UI::FilterString("Author", f_Author, changed);
+    AddSimpleTooltip("Case insensitive. Wildcard: `*`.");
+    UI::SameLine();
+    if (UI::Button(TrackStylesBtnText())) {
+        g_OpenTrackStyles = true;
+    }
+    UI::SameLine();
+    f_ExcludeTroll = UI::FilterBool("No Troll", f_ExcludeTroll, changed);
+}
+
+[Setting hidden]
+SortMethod f_SortMethod = SortMethod::NewFirst;
+
+void FiltersThirdRow() {
+    uint nbFilteredTracks = filteredTotds is null ? 0 : filteredTotds.Length;
+    UI::AlignTextToFramePadding();
+    UI::Text(""+nbFilteredTracks+" Tracks");
+    UI::SameLine();
+    if (UI::Button(Icons::Times)) {
+        ResetFilters();
+    }
+    AddSimpleTooltip("Reset Filters");
+    UI::SameLine();
+
+    UI::SetNextItemWidth(widthScale * 120);
+    if (UI::BeginCombo("Sort", tostring(f_SortMethod))) {
+        for (int i = 0; i < SortMethod::_LastNop; i++) {
+            auto sm = SortMethod(i);
+            if (UI::Selectable(tostring(sm), f_SortMethod == sm)) {
+                f_SortMethod = sm;
+                TOTD::SortTotds();
+                g_FiltersChanged = true;
+            }
+        }
+        UI::EndCombo();
     }
 }
 
@@ -460,7 +475,7 @@ namespace UI {
         if (UI::BeginCombo(label, val < 0 ? "" : MonthShortStr(val))) {
             for (int i = 0; i < int(monthStats.Length); i++) {
                 if (UI::Selectable(MonthShortStr(i), val == i)) {
-                    g_FilteresChanged = true;
+                    g_FiltersChanged = true;
                     ret = i;
                 }
             }
@@ -473,7 +488,7 @@ namespace UI {
         if (UI::BeginCombo(label, GetMedalIcon(val))) {
             for (int i = -1; i < 6; i++) {
                 if (UI::Selectable(GetMedalIcon(i), val == i)) {
-                    g_FilteresChanged = true;
+                    g_FiltersChanged = true;
                     ret = i;
                 }
             }
@@ -483,12 +498,12 @@ namespace UI {
     }
     bool FilterBool(const string &in label, bool val, bool &out changed) {
         bool ret = UI::Checkbox(label, val);
-        if (ret != val) g_FilteresChanged = true;
+        if (ret != val) g_FiltersChanged = true;
         return ret;
     }
     string FilterString(const string &in label, const string &in val, bool &out changed) {
         auto ret = UI::InputText(label, val, changed);
-        if (changed) g_FilteresChanged = true;
+        if (changed) g_FiltersChanged = true;
         return ret;
     }
 }

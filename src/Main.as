@@ -7,7 +7,7 @@ void Main() {
         NotifyWarning("You need the permissions to play local maps and play TOTDs to use this plugin.");
         return;
     }
-    startnew(UpdateTotdInfo);
+    startnew(TOTD::SyncMain);
     startnew(ClearTaskCoro);
     startnew(WatchForMapChange);
     startnew(WatchStaleStatsCache);

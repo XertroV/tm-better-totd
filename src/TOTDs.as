@@ -1,4 +1,4 @@
-Json::Value@ totdInfo = null;
+// Json::Value@ totdInfo = null;
 bool g_doneTotdInfoInitialLoad = false;
 DictOfTrackOfTheDayEntry_WriteLog@ totdDb = DictOfTrackOfTheDayEntry_WriteLog(IO::FromStorageFolder(""), "totd.db");
 
@@ -7,86 +7,243 @@ uint totalCampaigns = 0;
 
 bool logNewTOTDs = false;
 int64 newTotdAt = 0;
+int64 newTotdWaitFor = 0;
 int nbTotdReqs = 0;
 
-const string TOTD_JSON_CACHE_FILE = IO::FromStorageFolder("totd.json");
 
+namespace TOTD {
+    // March 2023 has a monthIx of 32
+    int maxMonthIx = 32;
 
-// spawns an infinite loop if it's sucessful
-void UpdateTotdInfo() {
-    bool shouldUpdate = totdInfo is null || totdInfo.Get('nextRequestTimestamp', 0) <= Time::Stamp;
-    if (shouldUpdate) {
-        if (totdInfo is null) startnew(LoadTotdFromCache);
-        nbTotdReqs += 1;
-        @totdInfo = Live::GetTotdByMonth();
-        nbTotdReqs -= 1;
-        // immediately copy this string and save it
-        CacheTotdJson(_LastLiveEndpointRaw);
-        OnTotdJsonLoad();
-        g_doneTotdInfoInitialLoad = true;
-    } else return;
-    // 10% of a day default
-    int64 waitSeconds = totdInfo.Get('relativeNextRequest', 8640);
-    newTotdAt = Time::Stamp + waitSeconds;
-    sleep(waitSeconds * 1000);
-    startnew(UpdateTotdInfo);
-}
+    void SyncMain() {
+        maxMonthIx = TimestampToMonthIx(-1);
+        totdDb.AwaitInitialized();
+        // totdDb.DeleteAll();
 
-void OnTotdJsonLoad() {
-    startnew(UpdateTotdCacheData);
-    totalMonths = totdInfo['monthList'].Length;
-    totalCampaigns = (totalMonths - 1) / 3 + 1;
-}
+        totalMonths = maxMonthIx + 1;
+        totalCampaigns = maxMonthIx / 3 + 1;
 
-void LoadTotdFromCache() {
-    if (totdInfo !is null) return;
-    if (IO::FileExists(TOTD_JSON_CACHE_FILE)) {
-        auto _totdsLast = Json::FromFile(TOTD_JSON_CACHE_FILE);
-        if (totdInfo !is null) return;
-        @totdInfo = _totdsLast;
-        OnTotdJsonLoad();
+        auto missing = LoadExistingTotds();
+        nbTotdReqs = missing.Length;
+        for (uint i = 0; i < missing.Length; i++) {
+            SyncTotdMonth(missing[i]);
+        }
+        logNewTOTDs = true;
+    }
+
+    int nextSyncLoopFor = 0;
+    // idempotent
+    void NextSyncLoop() {
+        if (Math::Abs(nextSyncLoopFor - newTotdAt) < 2) return;
+        nextSyncLoopFor = newTotdAt;
+        int64 waitTill = newTotdAt;
+        int64 waitFor = newTotdWaitFor;
+        log_trace("NextSyncLoop running at " + FmtTimestamp(waitTill) + " which is in " + waitFor + " seconds.");
+        sleep((waitFor - 5) * 1000);
+        log_trace("NextSyncLoop yielding until correct timestamp.");
+        if (Math::Abs(waitTill - Time::Stamp - 5) > 2) {
+            log_warn("NextSyncLoop out by > 2s");
+        }
+        while (Time::Stamp < waitTill) yield();
+        maxMonthIx = TimestampToMonthIx(-1);
+        log_trace("NextSyncLoop getting month number " + maxMonthIx + " (and prior month)");
+        SyncTotdMonth(maxMonthIx, true);
+        // also get month prior to be sure we get everything -- possible edge case near end of month if plugin loaded just before new TOTD.
+        SyncTotdMonth(maxMonthIx - 1);
+    }
+
+    void SyncTotdMonth(int monthIx, bool expectNew = false) {
+        int offset = maxMonthIx - monthIx;
+        auto totdJson = Live::GetTotdByMonth(1, offset);
+        nbTotdReqs--;
+
+        newTotdWaitFor = totdJson.Get('relativeNextRequest', 8640);
+        newTotdAt = Time::Stamp + newTotdWaitFor;
+        startnew(NextSyncLoop);
+
+        auto monthList = totdJson.Get('monthList');
+        if (monthList.Length == 0) {
+            log_warn("Got empty TOTD month (ix: "+monthIx+")");
+            return;
+        }
+        auto days = monthList[0].Get('days');
+        int iYear = monthList[0]['year'];
+        int iMonth = monthList[0]['month'];
+        for (uint m = 0; m < days.Length; m++) {
+            auto day = days[m];
+            string uid = day.Get('mapUid', '');
+            if (uid.Length == 0 || totdDb.Exists(uid)) continue;
+            if (logNewTOTDs) log_info("New TOTD: " + iYear + "-" + iMonth + "-" + (m + 1) + "; uid: " + uid);
+            auto totd = TrackOfTheDayEntry(day);
+            totdDb.Set(uid, totd);
+            auto lm = LazyMap(totd, iYear, iMonth);
+            if (totdMaps.Exists(uid)) throw('duplicate');
+            totdMaps[uid] = @lm;
+            allTotds.InsertLast(lm);
+        }
+        SortTotds();
+        if (expectNew) startnew(OnPossibleFreshTOTD);
+        PopulateMapInfos();
+    }
+
+    // Return a list of all months that are missing
+    int[]@ LoadExistingTotds() {
+        auto nbTracks = array<int>(maxMonthIx + 1);
+        auto totdUids = totdDb.GetKeys();
+        for (uint i = 0; i < totdUids.Length; i++) {
+            auto item = totdDb[totdUids[i]];
+            nbTracks[TimestampToMonthIx(item.startTimestamp)] += 1;
+            auto lm = LazyMap(item);
+            if (totdMaps.Exists(lm.uid)) throw('duplicate');
+            totdMaps[lm.uid] = @lm;
+            allTotds.InsertLast(lm);
+        }
+        SortTotds();
+        PopulateMapInfos();
+        int[] missing = {};
+        for (uint i = nbTracks.Length - 1; i < nbTracks.Length; i--) {
+            if (ExpectedTracksForMonthIx(i) != nbTracks[i]) {
+                missing.InsertLast(i);
+            }
+        }
+        // always add current month so we make at least 1 request
+        if (missing.Find(maxMonthIx) < 0) {
+            missing.InsertAt(0, maxMonthIx);
+        }
+        return missing;
+    }
+
+    int TimestampToMonthIx(int ts) {
+        auto dparts = FmtTimestampDateOnlyUTC(ts).Split("-");
+        int yr = Text::ParseInt(dparts[0]);
+        int mo = Text::ParseInt(dparts[1]);
+        return YrMoToMonthIx(yr, mo);
+    }
+
+    int ExpectedTracksForMonthIx(int monthIx) {
+        int mo = (monthIx + 6) % 12;
+        int year = (monthIx + 6) / 12 + 2020;
+        if (mo == 1) {
+            return year % 4 == 0 ? 29 : 28;
+        }
+        // 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+        if (mo < 7) {
+            return mo % 2 == 0 ? 31 : 30;
+        }
+        return mo % 2 == 0 ? 30 : 31;
+    }
+
+    void SortTotds() {
+        // keep the main list in this order
+        totdsQuicksort(allTotds, Less_OldFirst);
+    }
+
+    void OnPossibleFreshTOTD() {
+        // expect allTotds to be sorted already.
+        if (allTotds.Length == 0) return;
+        auto latest = allTotds[allTotds.Length - 1];
+        auto mapAgeSeconds = Math::Abs(Time::Stamp - latest.startTimestamp);
+        // only do this if the timestamp is within 20s of expected
+        if (mapAgeSeconds < 20 && S_InstaLoadTOTD > 0) {
+            while (!latest.MapInfoLoaded) yield();
+            auto app = GetApp();
+            bool inEditor = app.Editor !is null;
+            if (inEditor) return;
+            bool inMenu = app.Switcher.ModuleStack.Length == 0
+                || cast<CTrackManiaMenus>(app.Switcher.ModuleStack[0]) !is null;
+            // we always do this in-menu if the setting is > 0
+            if (inMenu || S_InstaLoadTOTD > 1) {
+                Notify("Loading fresh TOTD: " + latest.name);
+                latest.LoadThisMapBlocking();
+                return;
+            }
+        }
     }
 }
 
-void CacheTotdJson(string _raw) {
-    IO::File totdCache(TOTD_JSON_CACHE_FILE, IO::FileMode::Write);
-    totdCache.Write(_raw);
-    totdCache.Close();
+enum SortMethod {
+    NewFirst,
+    OldFirst,
+    PB_NewFirst,
+    PB_OldFirst,
+    TrackName,
+    AuthorName,
+    AuthorTime,
+    // FewestATsGlobal,
+    // MostATsGlobal,
+    // put new entries here
+    _LastNop
+}
+
+funcdef int MapLessF(LazyMap@ m1, LazyMap@ m2);
+
+int Less_TrackName(LazyMap@ m1, LazyMap@ m2) {
+    if (m1.cleanName < m2.cleanName) return -1;
+    if (m1.cleanName > m2.cleanName) return 1;
+    return 0;
+}
+int Less_AuthorName(LazyMap@ m1, LazyMap@ m2) {
+    if (m1.author < m2.author) return -1;
+    if (m1.author > m2.author) return 1;
+    return 0;
+}
+int Less_AuthorTime(LazyMap@ m1, LazyMap@ m2) {
+    if (m1.medals[0] == m2.medals[0]) return 0;
+    if (m1.medals[0] <= -1) return 1;
+    if (m2.medals[0] <= -1) return -1;
+    return Math::Clamp(m1.medals[0] - m2.medals[0], -1, 1);
+}
+
+int Less_PB_NewFirst(LazyMap@ m1, LazyMap@ m2) {
+    if (m1.playerRecordTimestamp == m2.playerRecordTimestamp) return 0;
+    if (m1.playerRecordTimestamp <= -1) return 1;
+    if (m2.playerRecordTimestamp <= -1) return -1;
+    return Math::Clamp(m2.playerRecordTimestamp - m1.playerRecordTimestamp, -1, 1);
+}
+
+int Less_PB_OldFirst(LazyMap@ m1, LazyMap@ m2) {
+    if (m1.playerRecordTimestamp == m2.playerRecordTimestamp) return 0;
+    if (m1.playerRecordTimestamp <= -1) return 1;
+    if (m2.playerRecordTimestamp <= -1) return -1;
+    return Math::Clamp(m1.playerRecordTimestamp - m2.playerRecordTimestamp, -1, 1);
+}
+
+int Less_NewFirst(LazyMap@ m1, LazyMap@ m2) {
+    return Math::Clamp(m2.startTimestamp - m1.startTimestamp, -1, 1);
+}
+
+int Less_OldFirst(LazyMap@ m1, LazyMap@ m2) {
+    return Math::Clamp(m1.startTimestamp - m2.startTimestamp, -1, 1);
+}
+
+MapLessF@[] sortMethods = {Less_NewFirst, Less_OldFirst, Less_PB_NewFirst, Less_PB_OldFirst, Less_TrackName, Less_AuthorName, Less_AuthorTime};
+
+void totdsQuicksort(LazyMap@[]@ arr, MapLessF@ f, int left = 0, int right = -1) {
+    if (right < 0) right = arr.Length - 1;
+    if (arr.Length == 0) return;
+    int i = left;
+    int j = right;
+    LazyMap@ pivot = arr[(left + right) / 2];
+
+    while (i <= j) {
+        while (f(arr[i], pivot) < 0) i++;
+        while (f(arr[j], pivot) > 0) j--;
+        if (i <= j) {
+            LazyMap@ temp = arr[i];
+            @arr[i] = arr[j];
+            @arr[j] = temp;
+            i++;
+            j--;
+        }
+    }
+
+    if (left < j) totdsQuicksort(arr, f, left, j);
+    if (i < right) totdsQuicksort(arr, f, i, right);
 }
 
 
 dictionary totdMaps;
-string[] totdUids;
 LazyMap@[] allTotds;
-
-void UpdateTotdCacheData() {
-    auto monthList = totdInfo.Get('monthList');
-    for (uint i = monthList.Length - 1; i < monthList.Length; i--) {
-        auto month = monthList[i];
-        auto days = month.Get('days');
-        int iYear = month['year'];
-        int iMonth = month['month'];
-        // for (uint m = days.Length - 1; m < days.Length; m--) {
-        for (uint m = 0; m < days.Length; m++) {
-            auto day = days[m];
-            string uid = day.Get('mapUid', '');
-            if (uid.Length == 0 || totdMaps.Exists(uid)) continue;
-            if (logNewTOTDs) log_info("New TOTD: " + uid + " " + iYear + "-" + iMonth + "-" + (m + 1));
-            totdUids.InsertLast(uid);
-            auto lm = LazyMap(uid, iYear, iMonth, day);
-            totdMaps[uid] = @lm;
-            allTotds.InsertLast(lm);
-        }
-    }
-    PopulateMapInfos();
-    logNewTOTDs = true;
-    // ! testing
-    // while (allTotds.Length > 0) {
-    //     sleep(1000);
-    //     allTotds.RemoveLast();
-    //     MarkRecordCacheStale();
-    // }
-}
 
 int nbMapInfoRequests = 0;
 
@@ -166,6 +323,11 @@ void RateLimit() {
 
 int nbPlayerRecordReqs = 0;
 
+int YrMoToMonthIx(int yr, int mo) {
+    // -6 at end b/c TOTDs started in July
+    return (yr - 2020) * 12 + (mo - 1) - 6;
+}
+
 class LazyMap {
     string uid;
     int year;
@@ -177,21 +339,30 @@ class LazyMap {
     string date;
     bool IsLikelyTroll = false;
 
-    LazyMap(const string &in uid, int year, int month, Json::Value@ totdJson) {
-        this.uid = uid;
-        this.year = year;
-        this.month = month;
-        day = totdJson['monthDay'];
-        weekDay = totdJson['day'];
-        startTimestamp = totdJson["startTimestamp"];
-        endTimestamp = totdJson["endTimestamp"];
-        date = FmtTimestampDateOnlyUTC(startTimestamp);
-        date = tostring(year) + '-' + Text::Format('%02d', month) + '-' + Text::Format('%02d', day);
-        // startnew(CoroutineFunc(LoadMap));
-        // recordCoros.InsertLast(startnew(CoroutineFunc(LoadRecord)));
+    LazyMap(TrackOfTheDayEntry@ totd, int _year = -1, int _month = -1) {
+        this.uid = totd.mapUid;
+        date = FmtTimestampDateOnlyUTC(totd.startTimestamp);
+        if (_year < 2020 || _month < 0) {
+            auto dparts = date.Split("-");
+            this.year = Text::ParseInt(dparts[0]);
+            this.month = Text::ParseInt(dparts[1]);
+        } else {
+            this.year = _year;
+            this.month = _month;
+        }
+
+        if (year < 2020 || year > 2100 || month < 1 || month > 12) {
+            throw("LazyMap: Bad year/month. date: " + date);
+        }
+
+        day = totd.monthDay;
+        weekDay = totd.day;
+        startTimestamp = totd.startTimestamp;
+        endTimestamp = totd.endTimestamp;
+        date = tostring(this.year) + '-' + Text::Format('%02d', month) + '-' + Text::Format('%02d', day);
         startnew(CoroutineFunc(LoadRecord));
 
-        int yrOffs = year - 2020;
+        int yrOffs = this.year - 2020;
         int monthOffs = month - 1;
         int startMonth = 6;
 
@@ -277,8 +448,7 @@ class LazyMap {
         } else if (playerRecordTime < 0) {
             playerRecordTime = -1;
         }
-        if (timeChanged)
-            UpdateMedalsInfo();
+        UpdateMedalsInfo();
     }
 
     void UpdateMedalsInfo() {
@@ -416,6 +586,10 @@ class LazyMap {
         UI::AlignTextToFramePadding();
         UI::Text(name);
         UI::PopFont();
+        vec2 off = vec2(0, UI::GetTextLineHeight() * .4);
+        UI::SetCursorPos(UI::GetCursorPos() - off);
+        UI::Text(authorByLine);
+        UI::SetCursorPos(UI::GetCursorPos() + off);
         if (playerMedal == 0) PBText();
         UI::Text(iconAuthor + authorTime);
         if (playerMedal == 1) PBText();
