@@ -6,8 +6,9 @@ Features:
 
 * View your medals by month, by campaign, or for all TOTDs.
 * Easily and quickly play any TOTD in Solo.
-* Filter TOTDs by date, medals, author name.
+* Filter TOTDs by date, medals, author, track name, TMX tags.
 * Instant PB loading, after TOTDs load.
+* Quick buttons for tm.io and TMX.
 
 If a map appears to be stuck, you can trigger a reload by loading and exiting that map.
 
