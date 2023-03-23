@@ -46,7 +46,7 @@ void DrawHomeStats() {
     g_SelectStatsTab = "";
 }
 
-vec4 overviewTableRowBg = vec4(.2, .2, .2, .3);
+vec4 overviewTableRowBg = vec4(.2, .2, .2, .2);
 
 void DrawOverviewStats() {
     globalStats.DrawStatus();
@@ -277,17 +277,20 @@ void DrawTotdAll() {
     float dateWidth = Draw::MeasureString("2222-22-22  ").x;
     float timeWidth = Draw::MeasureString("00:00:00.000").x;
     if (UI::BeginChild("all-totds")) {
-        if (UI::BeginTable("totds table", 7, UI::TableFlags::SizingFixedFit)) {
+        UI::PushStyleColor(UI::Col::TableRowBg, overviewTableRowBg);
+        if (UI::BeginTable("totds table", 8, UI::TableFlags::SizingFixedFit | UI::TableFlags::RowBg)) {
             UI::TableSetupColumn("date", UI::TableColumnFlags::WidthFixed, dateWidth);
             UI::TableSetupColumn("troll", UI::TableColumnFlags::WidthFixed, dateWidth / 4.);
             UI::TableSetupColumn("name", UI::TableColumnFlags::WidthStretch);
             UI::TableSetupColumn("author", UI::TableColumnFlags::WidthFixed, timeWidth * 2.);
             UI::TableSetupColumn("medal", UI::TableColumnFlags::WidthFixed, dateWidth / 3.);
             UI::TableSetupColumn("pb", UI::TableColumnFlags::WidthFixed, timeWidth);
+            UI::TableSetupColumn("pb-set", UI::TableColumnFlags::WidthFixed, dateWidth);
             UI::TableSetupColumn("btns");
             DrawTotdTableInner();
             UI::EndTable();
         }
+        UI::PopStyleColor();
     }
     UI::EndChild();
 }

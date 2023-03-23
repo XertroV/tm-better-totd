@@ -37,6 +37,8 @@ void NotifyWarning(const string &in msg) {
 const string PluginIcon = Icons::CalendarCheckO;
 const string MenuTitle = "\\$3bf" + PluginIcon + "\\$z " + Meta::ExecutingPlugin().Name;
 
+const string TM_IO_ICON = "\\$3af" + Icons::Heartbeat;
+
 // show the window immediately upon installation
 [Setting hidden]
 bool ShowWindow = true;
@@ -50,10 +52,6 @@ void RenderMenu() {
     UI::EndDisabled();
 }
 
-string m_URL;
-string m_TMX;
-bool m_UseTmxMirror = false;
-
 /** Render function called every frame.
 */
 void RenderInterface() {
@@ -65,19 +63,21 @@ void RenderInterface() {
     UI::SetNextWindowSize(int(size.x), int(size.y), UI::Cond::FirstUseEver);
     UI::SetNextWindowPos(int(pos.x), int(pos.y), UI::Cond::FirstUseEver);
     UI::PushStyleColor(UI::Col::FrameBg, vec4(.2, .2, .2, .5));
-    if (UI::Begin(MenuTitle, ShowWindow)) {
+    if (UI::Begin(MenuTitle + "\\$888   by XertroV", ShowWindow)) {
         RenderMainWindowInner();
     }
     UI::End();
     UI::PopStyleColor();
 }
 
-string tmxIdToUrl(const string &in id) {
-    if (m_UseTmxMirror) {
-        return "https://cgf.s3.nl-1.wasabisys.com/" + id + ".Map.Gbx";
-    }
-    return "https://trackmania.exchange/maps/download/" + id;
-}
+
+
+// string tmxIdToUrl(const string &in id) {
+//     if (m_UseTmxMirror) {
+//         return "https://cgf.s3.nl-1.wasabisys.com/" + id + ".Map.Gbx";
+//     }
+//     return "https://trackmania.exchange/maps/download/" + id;
+// }
 
 
 

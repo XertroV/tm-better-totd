@@ -71,3 +71,10 @@ CMapRecord@ GetPlayerRecordOnMap(const string &in mapUid) {
     }
     return task.MapRecordList[0];
 }
+
+uint Map_GetRecord_v2(const string &in mapUid) {
+    auto app = cast<CGameManiaPlanet>(GetApp());
+    auto mccma = app.MenuManager.MenuCustom_CurrentManiaApp;
+    auto userId = mccma.UserMgr.Users[0].Id;
+    return mccma.ScoreMgr.Map_GetRecord_v2(userId, mapUid, "PersonalBest", "", "TimeAttack", "");
+}

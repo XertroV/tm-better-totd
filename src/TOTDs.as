@@ -3,6 +3,9 @@ Json::Value@ totdInfo = null;
 uint totalMonths = 0;
 uint totalCampaigns = 0;
 
+bool logNewTOTDs = false;
+int64 newTotdAt = 0;
+
 // spawns an infinite loop if it's sucessful
 void UpdateTotdInfo() {
     bool shouldUpdate = totdInfo is null || totdInfo.Get('nextRequestTimestamp', 0) <= Time::Stamp;
@@ -13,7 +16,9 @@ void UpdateTotdInfo() {
         totalCampaigns = (totalMonths - 1) / 3 + 1;
     } else return;
     // 10% of a day default
-    sleep(int(totdInfo.Get('relativeNextRequest', 8640) * 1000));
+    int64 waitSeconds = totdInfo.Get('relativeNextRequest', 8640);
+    newTotdAt = Time::Stamp + waitSeconds;
+    sleep(waitSeconds * 1000);
     startnew(UpdateTotdInfo);
 
 }
@@ -34,6 +39,7 @@ void UpdateTotdCacheData() {
             auto day = days[m];
             string uid = day.Get('mapUid', '');
             if (uid.Length == 0 || totdMaps.Exists(uid)) continue;
+            if (logNewTOTDs) log_info("New TOTD: " + uid + " " + iYear + "-" + iMonth + "-" + (m + 1));
             totdUids.InsertLast(uid);
             auto lm = LazyMap(uid, iYear, iMonth, day);
             totdMaps[uid] = @lm;
@@ -41,6 +47,7 @@ void UpdateTotdCacheData() {
         }
     }
     PopulateMapInfos();
+    logNewTOTDs = true;
 }
 
 void PopulateMapInfos() {
@@ -93,7 +100,7 @@ void OnMapChanged() {
 
 
 uint lastTime = 0;
-uint rateLimitMs = 100;
+uint rateLimitMs = 200;
 
 void RateLimit() {
     while (true) {
@@ -163,6 +170,7 @@ class LazyMap {
     int playerRecordTime = -2;
     string playerRecordTimeStr;
     int playerMedal = -1;
+    int64 playerRecordTimestamp = -1;
 
     int campaignIx = 0;
     int monthIx = 0;
@@ -199,14 +207,30 @@ class LazyMap {
 
     string playerMedalLabel = Icons::QuestionCircle;
     void LoadRecord() {
+        playerRecordTime = int(Map_GetRecord_v2(uid));
+        if (playerRecordTime > 0)
+            playerRecordTimeStr = Time::Format(playerRecordTime);
+        UpdateMedalsInfo();
+        startnew(CoroutineFunc(LoadRecordFromAPI));
+    }
+
+    void LoadRecordFromAPI() {
         RateLimit();
         auto rec = GetPlayerRecordOnMap(uid);
+        bool timeChanged = false;
         if (rec !is null) {
+            timeChanged = playerRecordTime != rec.Time;
             playerRecordTime = rec.Time;
             playerRecordTimeStr = Time::Format(rec.Time);
-        } else {
+            playerRecordTimestamp = rec.Timestamp;
+        } else if (playerRecordTime < 0) {
             playerRecordTime = -1;
         }
+        if (timeChanged)
+            UpdateMedalsInfo();
+    }
+
+    void UpdateMedalsInfo() {
         while (!MapInfoLoaded) {
             yield();
         }
@@ -246,8 +270,15 @@ class LazyMap {
         if (playerRecordTime < -1) UI::Text(HourGlassAnim());
         else UI::Text(playerRecordTimeStr);
         UI::TableNextColumn();
+        if (playerRecordTimestamp > 0)
+            UI::Text(FmtTimestampDateOnly(playerRecordTimestamp));
+        UI::TableNextColumn();
         if (UI::Button("Play")) {
             startnew(CoroutineFunc(LoadThisMapBlocking));
+        }
+        UI::SameLine();
+        if (UI::Button(TM_IO_ICON)) {
+            OpenBrowserURL('https://trackmania.io/#/leaderboard/' + uid);
         }
         // UI::SameLine();
         // if (UI::Button("TMX")) {
