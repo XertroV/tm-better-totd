@@ -263,5 +263,5 @@ Stats@[] monthStats = {};
 
 string[] hourGlassIcons = {Icons::HourglassStart, Icons::HourglassHalf, Icons::HourglassEnd};
 const string HourGlassAnim() {
-    return hourGlassIcons[Time::Now % 1000 / 334];
+    return hourGlassIcons[(Time::Now / 2) % 1000 / 334];
 }

@@ -49,7 +49,7 @@ bool ShowWindow = true;
 /** Render function called every frame intended only for menu items in `UI`. */
 void RenderMenu() {
     UI::BeginDisabled(!UserHasPermissions);
-    if (UI::MenuItem(MenuTitle, "", ShowWindow)) {
+    if (UI::MenuItem(MenuTitle, "\\$aaa" + Icons::ClockO + GetHumanTimePeriod(Math::Max(0, newTotdAt - Time::Stamp)), ShowWindow)) {
         ShowWindow = !ShowWindow;
     }
     UI::EndDisabled();
