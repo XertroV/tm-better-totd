@@ -19,8 +19,9 @@ Note: Instant PB loading is experimental, please report bugs. As a backup, your 
 - sort by # of ppl who have AT
 - integration with author-tracker
 - ~~filter map name~~
-- add sorting to TOTD table
+- ~~add sorting to TOTD table~~
 - ~~styles via TMX~~
+- main page w/ thumbnail and nice layout?
 
 ### TEST
 

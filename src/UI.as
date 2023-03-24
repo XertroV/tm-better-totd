@@ -28,7 +28,6 @@ void DrawHomeStats() {
         DrawOverviewStats();
         UI::EndTabItem();
     }
-
     if (StatsTab("By Campaign")) {
         DrawStatsByCampaign();
         UI::EndTabItem();
@@ -41,8 +40,8 @@ void DrawHomeStats() {
         DrawTotdAll();
         UI::EndTabItem();
     }
-
     DrawAboutTabOuter();
+    AuthorTracker::DrawTab();
 
     UI::EndTabBar();
     g_SelectStatsTab = "";
@@ -275,17 +274,20 @@ int DrawPaginationBar(const string &in label, int curr, int min, int max, bool &
     return Math::Clamp(curr, min, max);
 }
 
-
+float dateWidth = 50;
+float timeWidth = 60;
+float atCountWidth = 60;
 void DrawTotdAll() {
     globalStats.DrawStatus();
     DrawTotdFilters();
     UI::Separator();
     if (filteredTotds is null) return;
-    float dateWidth = Draw::MeasureString("2222-22-22  ").x;
-    float timeWidth = Draw::MeasureString("00:00:00.000").x;
+    dateWidth = Draw::MeasureString("2222-22-22  ").x;
+    timeWidth = Draw::MeasureString("00:00:00.000").x;
+    atCountWidth = Draw::MeasureString("99999 xx ").x;
     if (UI::BeginChild("all-totds")) {
         UI::PushStyleColor(UI::Col::TableRowBg, overviewTableRowBg);
-        if (UI::BeginTable("totds table", 8, UI::TableFlags::SizingFixedFit | UI::TableFlags::RowBg)) {
+        if (UI::BeginTable("totds table", 9, UI::TableFlags::SizingFixedFit | UI::TableFlags::RowBg)) {
             UI::TableSetupColumn("date", UI::TableColumnFlags::WidthFixed, dateWidth);
             UI::TableSetupColumn("troll", UI::TableColumnFlags::WidthFixed, dateWidth / 4.);
             UI::TableSetupColumn("name", UI::TableColumnFlags::WidthStretch);
@@ -293,6 +295,7 @@ void DrawTotdAll() {
             UI::TableSetupColumn("medal", UI::TableColumnFlags::WidthFixed, dateWidth / 3.);
             UI::TableSetupColumn("pb", UI::TableColumnFlags::WidthFixed, timeWidth);
             UI::TableSetupColumn("pb-set", UI::TableColumnFlags::WidthFixed, dateWidth);
+            UI::TableSetupColumn("nb-ats", UI::TableColumnFlags::WidthFixed, atCountWidth);
             UI::TableSetupColumn("btns");
             DrawTotdTableInner();
             UI::EndTable();

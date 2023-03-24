@@ -1,5 +1,5 @@
 void DrawAboutTabOuter() {
-    auto totalReqs = nbTotdReqs + nbMapInfoRequests + nbPlayerRecordReqs + nbTmxReqs;
+    auto totalReqs = nbTotdReqs + nbMapInfoRequests + nbPlayerRecordReqs + nbTmxReqs + AuthorTracker::nbReqs;
     auto label = totalReqs == 0 ? "About###about-tab" : ("About (" + HourGlassAnim() + " " + totalReqs + ")###about-tab");
     if (UI::BeginTabItem(label, UI::TabItemFlags::Trailing)) {
         DrawAboutTabInner();
@@ -12,6 +12,7 @@ void DrawAboutTabInner() {
     UI::FullWidthCentered("VersionLineInfo", About::VersionLineInfo);
     UI::Separator();
     UI::FullWidthCentered("RequestsStatus", About::RequestsStatus);
+    UI::FullWidthCentered("DrawNextRequestsAt", About::DrawNextRequestsAt);
 }
 
 namespace About {
@@ -39,6 +40,7 @@ namespace About {
     }
 
     void RequestsStatus() {
+        UI::AlignTextToFramePadding();
         UI::Text("Current Requests:");
         UI::SameLine();
         UI::Text("TOTD: " + nbTotdReqs);
@@ -48,6 +50,13 @@ namespace About {
         UI::Text("PBs: " + nbPlayerRecordReqs);
         UI::SameLine();
         UI::Text("TMX: " + nbTmxReqs);
+        UI::SameLine();
+        UI::Text("Author Tracker: " + AuthorTracker::nbReqs);
+    }
+
+    void DrawNextRequestsAt() {
+        UI::Text("Author Tracker update in " + GetHumanTimePeriod(AuthorTracker::NextRequestWaitTimeSeconds()));
+        UI::Text("Next TOTD in " + GetHumanTimePeriod(newTotdAt - Time::Stamp));
     }
 }
 

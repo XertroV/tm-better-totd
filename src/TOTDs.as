@@ -1,5 +1,4 @@
 // Json::Value@ totdInfo = null;
-bool g_doneTotdInfoInitialLoad = false;
 DictOfTrackOfTheDayEntry_WriteLog@ totdDb = DictOfTrackOfTheDayEntry_WriteLog(IO::FromStorageFolder(""), "totd.db");
 
 uint totalMonths = 0;
@@ -14,6 +13,7 @@ int nbTotdReqs = 0;
 namespace TOTD {
     // March 2023 has a monthIx of 32
     int maxMonthIx = 32;
+    bool initialSyncDone = false;
 
     void SyncMain() {
         maxMonthIx = TimestampToMonthIx(-1);
@@ -29,6 +29,7 @@ namespace TOTD {
             SyncTotdMonth(missing[i]);
         }
         logNewTOTDs = true;
+        initialSyncDone = true;
     }
 
     int nextSyncLoopFor = 0;
@@ -161,20 +162,6 @@ namespace TOTD {
     }
 }
 
-enum SortMethod {
-    NewFirst,
-    OldFirst,
-    PB_NewFirst,
-    PB_OldFirst,
-    TrackName,
-    AuthorName,
-    AuthorTime,
-    // FewestATsGlobal,
-    // MostATsGlobal,
-    // put new entries here
-    _LastNop
-}
-
 funcdef int MapLessF(LazyMap@ m1, LazyMap@ m2);
 
 int Less_TrackName(LazyMap@ m1, LazyMap@ m2) {
@@ -192,6 +179,18 @@ int Less_AuthorTime(LazyMap@ m1, LazyMap@ m2) {
     if (m1.medals[0] <= -1) return 1;
     if (m2.medals[0] <= -1) return -1;
     return Math::Clamp(m1.medals[0] - m2.medals[0], -1, 1);
+}
+int Less_FewestATs(LazyMap@ m1, LazyMap@ m2) {
+    if (m1.AtCount == m2.AtCount) return 0;
+    if (m1.AtCount <= -1) return 1;
+    if (m2.AtCount <= -1) return -1;
+    return Math::Clamp(m1.AtCount - m2.AtCount, -1, 1);
+}
+int Less_MostATs(LazyMap@ m1, LazyMap@ m2) {
+    if (m1.AtCount == m2.AtCount) return 0;
+    if (m1.AtCount <= -1) return 1;
+    if (m2.AtCount <= -1) return -1;
+    return Math::Clamp(m2.AtCount - m1.AtCount, -1, 1);
 }
 
 int Less_PB_NewFirst(LazyMap@ m1, LazyMap@ m2) {
@@ -216,7 +215,31 @@ int Less_OldFirst(LazyMap@ m1, LazyMap@ m2) {
     return Math::Clamp(m1.startTimestamp - m2.startTimestamp, -1, 1);
 }
 
-MapLessF@[] sortMethods = {Less_NewFirst, Less_OldFirst, Less_PB_NewFirst, Less_PB_OldFirst, Less_TrackName, Less_AuthorName, Less_AuthorTime};
+enum SortMethod {
+    NewFirst,
+    OldFirst,
+    PB_NewFirst,
+    PB_OldFirst,
+    TrackName,
+    AuthorName,
+    AuthorTime,
+    FewestATs,
+    MostATs,
+    // put new entries here
+    _LastNop
+}
+
+MapLessF@[] sortMethods = {
+    Less_NewFirst,
+    Less_OldFirst,
+    Less_PB_NewFirst,
+    Less_PB_OldFirst,
+    Less_TrackName,
+    Less_AuthorName,
+    Less_AuthorTime,
+    Less_FewestATs,
+    Less_MostATs
+};
 
 void totdsQuicksort(LazyMap@[]@ arr, MapLessF@ f, int left = 0, int right = -1) {
     if (right < 0) right = arr.Length - 1;
@@ -338,6 +361,8 @@ class LazyMap {
     int endTimestamp;
     string date;
     bool IsLikelyTroll = false;
+    // we get this from author-tracker.com
+    int AtCount = -1;
 
     LazyMap(TrackOfTheDayEntry@ totd, int _year = -1, int _month = -1) {
         this.uid = totd.mapUid;
@@ -493,6 +518,13 @@ class LazyMap {
         UI::TableNextColumn();
         if (playerRecordTimestamp > 0)
             UI::Text(FmtTimestampDateOnly(playerRecordTimestamp));
+        UI::TableNextColumn();
+        if (AtCount >= 0) {
+            string _atCount = Text::Format("%d ", AtCount) + "\\$071" + Icons::Globe;
+            auto size = Draw::MeasureString(_atCount);
+            UI::SetCursorPos(UI::GetCursorPos() + vec2(atCountWidth - size.x, 0));
+            UI::Text(_atCount);
+        }
         UI::TableNextColumn();
         if (UI::Button("Play")) {
             startnew(CoroutineFunc(LoadThisMapBlocking));
