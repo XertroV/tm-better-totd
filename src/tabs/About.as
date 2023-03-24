@@ -13,6 +13,9 @@ void DrawAboutTabInner() {
     UI::Separator();
     UI::FullWidthCentered("RequestsStatus", About::RequestsStatus);
     UI::FullWidthCentered("DrawNextRequestsAt", About::DrawNextRequestsAt);
+    if (UI::CollapsingHeader("In-progress PB requests")) {
+        About::DrawInProgressPbReqs();
+    }
     UI::Separator();
     UI::FullWidthCentered("UtilButtons", About::UtilButtons);
 }
@@ -64,6 +67,18 @@ namespace About {
     void UtilButtons() {
         if (UI::Button("Your Author Tracker rank: " + AuthorTracker::PlayersRanking())) {
             OpenBrowserURL("https://www.author-tracker.com/player/" + LocalAccountId);
+        }
+    }
+
+    void DrawInProgressPbReqs() {
+        auto uids = pbRecordsReqs.GetKeys();
+        UI::ListClipper clip(uids.Length);
+        while (clip.Step()) {
+            for (int i = clip.DisplayStart; i < clip.DisplayEnd; i++) {
+                string uid = uids[i];
+                auto map = cast<LazyMap>(totdMaps[uid]);
+                UI::Text(map.cleanName + ": " + int(pbRecordsReqs[uid]));
+            }
         }
     }
 }

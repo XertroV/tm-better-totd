@@ -240,19 +240,7 @@ void DrawNextTotdCountdownButton(vec2 size) {
     UI::PushStyleColor(UI::Col::Text, vec4(1, 1, 1, .5));
     UI::Text(timeLeft);
     UI::PopStyleColor();
-    // UI::SetCursorPos(pos + size * vec2(.5, .5) - vec2(fontH/2.66, fontH/2.) * .9);
-    // UI::Text(playerMedalLabel);
     UI::PopFont();
-
-    // if (playerRecordTime > 0) {
-    //     // auto smallFontH = UI::GetTextLineHeight();
-    //     UI::PushFont(g_BoldFont);
-    //     auto recSz = Draw::MeasureString(playerRecordTimeStr);
-    //     UI::SetCursorPos(pos + size * vec2(.5, .5) - recSz / 2.);
-    //     UI::Text(playerRecordTimeStr);
-    //     UI::PopFont();
-    // }
-
     UI::SetCursorPos(endPos);
 }
 

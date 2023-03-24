@@ -106,7 +106,7 @@ namespace AuthorTracker {
                 if (limitExecTime && count % 50 == 0) yield();
             }
         }
-        log_info("Set AtCount on " + count + " maps.");
+        log_trace("Set AtCount on " + count + " maps.");
         if (limitExecTime) yield();
         MarkRecordCacheStale();
     }
@@ -124,12 +124,13 @@ namespace AuthorTracker {
     }
 
     void DrawTab() {
+        // disable for the moment
         return;
-        if (data is null) return;
-        if (StatsTab("Author Tracker")) {
-            UI::FullWidthCentered("atcom-main", DrawMainData);
-            UI::EndTabItem();
-        }
+        // if (data is null) return;
+        // if (StatsTab("Author Tracker")) {
+        //     UI::FullWidthCentered("atcom-main", DrawMainData);
+        //     UI::EndTabItem();
+        // }
     }
 
     void DrawMainData() {

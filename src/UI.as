@@ -348,7 +348,7 @@ void DrawTotdFilters() {
 
     if (filteredTotds !is null && !g_FiltersChanged) return;
     g_FiltersChanged = false;
-    log_trace("Updating TOTD filtered list");
+    log_debug("Updating TOTD filtered list");
 
     PrepAuthorFilter();
     PrepNameFilter();
@@ -366,7 +366,7 @@ void DrawTotdFilters() {
         if (!TrackMatchesTagsFilters(map.GetTmxInfo())) continue;
         filteredTotds.InsertLast(map);
     }
-    totdsQuicksort(filteredTotds, f_SortMethod < sortMethods.Length ? sortMethods[f_SortMethod] : Less_NewFirst);
+    totdsQuicksort(filteredTotds, f_SortMethod < int(sortMethods.Length) ? sortMethods[f_SortMethod] : Less_NewFirst);
 }
 
 void FiltersTopRow() {

@@ -345,6 +345,23 @@ void RateLimit() {
 */
 
 int nbPlayerRecordReqs = 0;
+dictionary pbRecordsReqs;
+
+void PbReqStarted(const string &in uid) {
+    nbPlayerRecordReqs += 1;
+    if (!pbRecordsReqs.Exists(uid)) pbRecordsReqs[uid] = 1;
+    else pbRecordsReqs[uid] = int(pbRecordsReqs[uid]) + 1;
+}
+void PbReqFinished(const string &in uid) {
+    nbPlayerRecordReqs -= 1;
+    if (!pbRecordsReqs.Exists(uid)) {
+        log_warn(uid + ' Request finished but 0 inprogress');
+        return;
+    }
+    int newReqs = int(pbRecordsReqs[uid]) - 1;
+    if (newReqs == 0) pbRecordsReqs.Delete(uid);
+    else pbRecordsReqs[uid] = newReqs;
+}
 
 int YrMoToMonthIx(int yr, int mo) {
     // -6 at end b/c TOTDs started in July
@@ -459,11 +476,16 @@ class LazyMap {
         startnew(CoroutineFunc(LoadRecordFromAPI));
     }
 
+    bool rateLimitGetPb = true;
+
     void LoadRecordFromAPI() {
-        nbPlayerRecordReqs += 1;
-        RateLimit();
+        PbReqStarted(uid);
+        if (rateLimitGetPb) RateLimit();
         auto rec = GetPlayerRecordOnMap(uid);
-        nbPlayerRecordReqs -= 1;
+        PbReqFinished(uid);
+        // don't rate limit future requests b/c it's probably when we exit a map.
+        rateLimitGetPb = false;
+
         bool timeChanged = false;
         if (rec !is null) {
             timeChanged = playerRecordTime != int(rec.Time);
