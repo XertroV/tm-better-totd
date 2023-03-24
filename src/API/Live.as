@@ -8,4 +8,9 @@ namespace Live {
     Json::Value@ GetTotdByMonth(uint length = 100, uint offset = 0) {
         return CallLiveApiPath("/api/token/campaign/month?" + LengthAndOffset(length, offset));
     }
+
+    /* todo, TOTD join link:
+    https://live-services.trackmania.nadeo.live/api/token/channel/daily/join
+    response: {"joinLink":"#qjoin=OaVaI6gRRrCOdo7HUIXF8A"}
+    */
 }

@@ -58,6 +58,10 @@ namespace AuthorTracker {
         }
     }
 
+    const string UrlForGetPlayersInfo(const string &in wsid) {
+        return "https://www.author-tracker.com/api/v1/player/" + wsid;
+    }
+
     int nbReqs = 0;
     string lastGetPlayersInfoRaw;
     Json::Value@ GetPlayersInfo(const string &in wsid) {
@@ -105,6 +109,18 @@ namespace AuthorTracker {
         log_info("Set AtCount on " + count + " maps.");
         if (limitExecTime) yield();
         MarkRecordCacheStale();
+    }
+
+    const string PlayersRanking() {
+        if (data is null) return "Unknown";
+        try {
+            if (string(data.Get('player').Get('id')) != LocalAccountId) {
+                return "Unranked";
+            }
+            return tostring(int(data.Get('rank')));
+
+        } catch {}
+        return "Unknown";
     }
 
     void DrawTab() {

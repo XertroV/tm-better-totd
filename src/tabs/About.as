@@ -13,6 +13,8 @@ void DrawAboutTabInner() {
     UI::Separator();
     UI::FullWidthCentered("RequestsStatus", About::RequestsStatus);
     UI::FullWidthCentered("DrawNextRequestsAt", About::DrawNextRequestsAt);
+    UI::Separator();
+    UI::FullWidthCentered("UtilButtons", About::UtilButtons);
 }
 
 namespace About {
@@ -57,6 +59,12 @@ namespace About {
     void DrawNextRequestsAt() {
         UI::Text("Author Tracker update in " + GetHumanTimePeriod(AuthorTracker::NextRequestWaitTimeSeconds()));
         UI::Text("Next TOTD in " + GetHumanTimePeriod(newTotdAt - Time::Stamp));
+    }
+
+    void UtilButtons() {
+        if (UI::Button("Your Author Tracker rank: " + AuthorTracker::PlayersRanking())) {
+            OpenBrowserURL("https://www.author-tracker.com/player/" + LocalAccountId);
+        }
     }
 }
 

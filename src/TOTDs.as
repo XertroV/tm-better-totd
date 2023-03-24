@@ -520,7 +520,7 @@ class LazyMap {
             UI::Text(FmtTimestampDateOnly(playerRecordTimestamp));
         UI::TableNextColumn();
         if (AtCount >= 0) {
-            string _atCount = Text::Format("%d ", AtCount) + "\\$071" + Icons::Globe;
+            string _atCount = Text::Format("%d \\$071", AtCount) + Icons::Globe;
             auto size = Draw::MeasureString(_atCount);
             UI::SetCursorPos(UI::GetCursorPos() + vec2(atCountWidth - size.x, 0));
             UI::Text(_atCount);

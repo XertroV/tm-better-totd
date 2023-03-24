@@ -4,11 +4,14 @@ A TOTD browser with info about your PBs and medals.
 
 Features:
 
+* Easily and quickly find and play any TOTD in Solo.
 * View your medals by month, by campaign, or for all TOTDs.
-* Easily and quickly play any TOTD in Solo.
 * Filter TOTDs by date, medals, author, track name, TMX tags.
-* Instant PB loading, after TOTDs load.
+* Sort by date, PB date, track name, author name, # ATs.
+* Auto-load new TOTDs the second they become available.
+* Integration with [Author-Tracker.com](https://author-tracker.com).
 * Quick buttons for tm.io and TMX.
+* Great UI & Instant PB loading.
 
 If a map appears to be stuck, you can trigger a reload by loading and exiting that map.
 
@@ -16,8 +19,8 @@ Note: Instant PB loading is experimental, please report bugs. As a backup, your 
 
 ### TODO
 
-- sort by # of ppl who have AT
-- integration with author-tracker
+- ~~sort by # of ppl who have AT~~
+- ~~integration with author-tracker~~
 - ~~filter map name~~
 - ~~add sorting to TOTD table~~
 - ~~styles via TMX~~
