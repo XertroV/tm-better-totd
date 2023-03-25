@@ -48,6 +48,7 @@ namespace TOTD {
         while (Time::Stamp < waitTill) yield();
         maxMonthIx = TimestampToMonthIx(-1);
         log_trace("NextSyncLoop getting month number " + maxMonthIx + " (and prior month)");
+        nbTotdReqs += 2;
         SyncTotdMonth(maxMonthIx, true);
         // also get month prior to be sure we get everything -- possible edge case near end of month if plugin loaded just before new TOTD.
         SyncTotdMonth(maxMonthIx - 1);
@@ -429,6 +430,7 @@ class LazyMap {
     int[] medals = {-1, -1, -1, -1};
     int playerRecordTime = -2;
     string playerRecordTimeStr;
+    string playerRecordTimeStrShort;
     int playerMedal = -1;
     int64 playerRecordTimestamp = -1;
 
@@ -469,9 +471,7 @@ class LazyMap {
 
     string playerMedalLabel = Icons::QuestionCircle;
     void LoadRecord() {
-        playerRecordTime = int(Map_GetRecord_v2(uid));
-        if (playerRecordTime > 0)
-            playerRecordTimeStr = Time::Format(playerRecordTime);
+        _SetPlayerRecordTime(int(Map_GetRecord_v2(uid)));
         UpdateMedalsInfo();
         startnew(CoroutineFunc(LoadRecordFromAPI));
     }
@@ -489,13 +489,20 @@ class LazyMap {
         bool timeChanged = false;
         if (rec !is null) {
             timeChanged = playerRecordTime != int(rec.Time);
-            playerRecordTime = rec.Time;
-            playerRecordTimeStr = Time::Format(rec.Time);
+            _SetPlayerRecordTime(rec.Time);
             playerRecordTimestamp = rec.Timestamp;
         } else if (playerRecordTime < 0) {
             playerRecordTime = -1;
         }
         UpdateMedalsInfo();
+    }
+
+    void _SetPlayerRecordTime(int time) {
+        playerRecordTime = time;
+        if (playerRecordTime > 0) {
+            playerRecordTimeStrShort = "\\$s" + Time::Format(playerRecordTime, true, false);
+            playerRecordTimeStr = Time::Format(playerRecordTime);
+        }
     }
 
     void UpdateMedalsInfo() {
@@ -615,9 +622,9 @@ class LazyMap {
         if (playerRecordTime > 0) {
             // auto smallFontH = UI::GetTextLineHeight();
             UI::PushFont(g_BoldFont);
-            auto recSz = Draw::MeasureString(playerRecordTimeStr);
+            auto recSz = Draw::MeasureString(playerRecordTimeStrShort);
             UI::SetCursorPos(pos + size * vec2(.5, .5) - recSz / 2.);
-            UI::Text(playerRecordTimeStr);
+            UI::Text(playerRecordTimeStrShort);
             UI::PopFont();
         }
 
