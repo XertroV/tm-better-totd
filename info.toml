@@ -8,6 +8,6 @@ siteid   = 352
 [script]
 #__DEFINES__
 dependencies = ["NadeoServices"]
-optional_dependencies = ["Archivist", "ManiaExchange"]
+optional_dependencies = ["Archivist", "ManiaExchange", "MLHook"]
 # exports = ["Exports_BetterTotd.as"]
 #defines = ["UNIT_TEST"]

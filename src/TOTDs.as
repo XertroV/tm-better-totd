@@ -378,11 +378,13 @@ class LazyMap {
     int startTimestamp;
     int endTimestamp;
     string date;
+    TrackOfTheDayEntry@ totdEntry;
     bool IsLikelyTroll = false;
     // we get this from author-tracker.com
     int AtCount = -1;
 
     LazyMap(TrackOfTheDayEntry@ totd, int _year = -1, int _month = -1) {
+        @totdEntry = totd;
         this.uid = totd.mapUid;
         date = FmtTimestampDateOnlyUTC(totd.startTimestamp);
         if (_year < 2020 || _month < 0) {
@@ -417,6 +419,7 @@ class LazyMap {
 
     bool MapInfoLoaded = false;
     string name = "??";
+    string rawName = "??";
     string cleanName = "??";
     string author = "??";
     string authorByLine = "??";
@@ -451,6 +454,7 @@ class LazyMap {
         }
 
         name = ColoredString(map.Name);
+        rawName = map.Name;
         cleanName = StripFormatCodes(map.Name);
         author = map.AuthorDisplayName;
         authorByLine = "\\$888by \\$z" + author;
@@ -637,7 +641,24 @@ class LazyMap {
     }
 
     void LoadThisMapBlocking() {
-        LoadMapNowWrapper(mapUrl);
+        bool isLive = startTimestamp <= Time::Stamp && Time::Stamp < endTimestamp;
+        string settings = """<root>
+				<setting name=S_CampaignId value="_DailyMap.CampaignId" type=integer/>
+				<setting name=S_CampaignMonthlyId value="_CurrentCampaign.Id" type=integer/>
+				<setting name=S_CampaignType value="1" type=integer/>
+				<setting name=S_CampaignIsLive value="CampaignIsLive" type=boolean/>
+			</root>""";
+        // note: not sure what _CurrentCampaign is -- it's referred to as the monthly campaign. setting to 0 seems fine.
+        settings = settings
+            .Replace("CampaignIsLive", isLive ? "1" : "0")
+            .Replace("_DailyMap.CampaignId", tostring(totdEntry.campaignId))
+            .Replace("_CurrentCampaign.Id", "0");
+#if DEPENDENCY_MLHOOK
+        if (Meta::GetPluginFromID("MLHook").Enabled) {
+            MLHook::Queue_Menu_SendCustomEvent("Event_UpdateLoadingScreen", {rawName});
+        }
+#endif
+        LoadMapNowWrapper(mapUrl, settings);
     }
 
     void DrawMapTooltip() {

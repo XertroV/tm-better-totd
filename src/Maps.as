@@ -1,4 +1,4 @@
-void LoadMapNowWrapper(const string &in url) {
+void LoadMapNowWrapper(const string &in url, const string &in settings) {
 #if DEPENDENCY_ARCHIVIST
     if (S_LoadInArchivist) {
         try {
@@ -7,7 +7,7 @@ void LoadMapNowWrapper(const string &in url) {
         } catch {}
     }
 #endif
-    LoadMapNow(url);
+    LoadMapNow(url, "TrackMania/TM_Campaign_Local", settings);
 }
 
 void LoadMapNow(const string &in url, const string &in mode = "", const string &in settingsXml = "") {
