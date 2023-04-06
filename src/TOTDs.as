@@ -380,6 +380,7 @@ class LazyMap {
     string date;
     TrackOfTheDayEntry@ totdEntry;
     bool IsLikelyTroll = false;
+    string monthCampaignId;
     // we get this from author-tracker.com
     int AtCount = -1;
 
@@ -395,6 +396,8 @@ class LazyMap {
             this.year = _year;
             this.month = _month;
         }
+
+        monthCampaignId = Text::Format("%d" + year, month);
 
         if (year < 2020 || year > 2100 || month < 1 || month > 12) {
             throw("LazyMap: Bad year/month. date: " + date);
@@ -643,16 +646,16 @@ class LazyMap {
     void LoadThisMapBlocking() {
         bool isLive = startTimestamp <= Time::Stamp && Time::Stamp < endTimestamp;
         string settings = """<root>
-				<setting name=S_CampaignId value="_DailyMap.CampaignId" type=integer/>
-				<setting name=S_CampaignMonthlyId value="_CurrentCampaign.Id" type=integer/>
-				<setting name=S_CampaignType value="1" type=integer/>
-				<setting name=S_CampaignIsLive value="CampaignIsLive" type=boolean/>
+				<setting name="S_CampaignId" value="_DailyMap.CampaignId" type="integer"/>
+				<setting name="S_CampaignMonthlyId" value="_CurrentCampaign.Id" type="integer"/>
+				<setting name="S_CampaignType" value="1" type="integer"/>
+				<setting name="S_CampaignIsLive" value="IsCampaignLive" type="boolean"/>
 			</root>""";
-        // note: not sure what _CurrentCampaign is -- it's referred to as the monthly campaign. setting to 0 seems fine.
         settings = settings
-            .Replace("CampaignIsLive", isLive ? "1" : "0")
+            .Replace("IsCampaignLive", isLive ? "1" : "0")
             .Replace("_DailyMap.CampaignId", tostring(totdEntry.campaignId))
-            .Replace("_CurrentCampaign.Id", "0");
+            .Replace("_CurrentCampaign.Id", monthCampaignId);
+        log_trace("Loading map with settings: " + settings);
 #if DEPENDENCY_MLHOOK
         if (Meta::GetPluginFromID("MLHook").Enabled) {
             MLHook::Queue_Menu_SendCustomEvent("Event_UpdateLoadingScreen", {rawName});
