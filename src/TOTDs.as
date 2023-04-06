@@ -658,7 +658,11 @@ class LazyMap {
         log_trace("Loading map with settings: " + settings);
 #if DEPENDENCY_MLHOOK
         if (Meta::GetPluginFromID("MLHook").Enabled) {
+            // we need this call to have the in-game menu load correctly.
+            MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaign", {monthCampaignId});
             MLHook::Queue_Menu_SendCustomEvent("Event_UpdateLoadingScreen", {rawName});
+            // give a chance for the ML to load the monthly stuff since the menu ML gets paused once we're in-map
+            sleep(200);
         }
 #endif
         LoadMapNowWrapper(mapUrl, settings);
