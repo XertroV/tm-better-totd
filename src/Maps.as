@@ -7,7 +7,15 @@ void LoadMapNowWrapper(const string &in url, const string &in settings) {
         } catch {}
     }
 #endif
-    LoadMapNow(url, "TrackMania/TM_Campaign_Local", settings);
+    // only load this if MLHook is installed b/c the UI sucks otherwise.
+    // PlayMap ui is better than bad campaign ui
+#if DEPENDENCY_MLHOOK
+    if (Meta::GetPluginFromID("MLHook").Enabled) {
+        LoadMapNow(url, "TrackMania/TM_Campaign_Local", settings);
+        return;
+    }
+#endif
+    LoadMapNow(url, "", settings);
 }
 
 void LoadMapNow(const string &in url, const string &in mode = "", const string &in settingsXml = "") {

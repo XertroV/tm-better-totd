@@ -13,12 +13,28 @@ void Main() {
     startnew(WatchStaleStatsCache);
     startnew(ScanForMissingTmx);
     startnew(AuthorTracker::Load);
+    startnew(SendEventsAfterStartup);
 }
 
 void OnDestroyed() { Unload(); }
 void OnDisabled() { Unload(); }
 void Unload() {
     ClearAllTasksNow();
+}
+
+// we need to do this because otherwise some Action_LoadMonthlyCampaign events will fail
+void SendEventsAfterStartup() {
+#if DEPENDENCY_MLHOOK
+    if (!Meta::GetPluginFromID("MLHook").Enabled) return;
+    sleep(5000);
+    // 1 + completed years since July 1 2020
+    int yrsSinceLaunch = 3;
+    while (yrsSinceLaunch > 0) {
+        sleep(3000);
+        MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaignsList", {tostring(12 * yrsSinceLaunch), "12"});
+        yrsSinceLaunch--;
+    }
+#endif
 }
 
 void Notify(const string &in msg) {
