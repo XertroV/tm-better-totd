@@ -29,11 +29,13 @@ void SendEventsAfterStartup() {
     sleep(5000);
     // 1 + completed years since July 1 2020
     int yrsSinceLaunch = 3;
-    while (yrsSinceLaunch > 0) {
-        sleep(3000);
-        MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaignsList", {tostring(12 * yrsSinceLaunch), "12"});
-        yrsSinceLaunch--;
-    }
+    // MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaignsList", {"0", tostring(12 * yrsSinceLaunch)});
+    // MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadCampaign", {"0"});
+    // while (yrsSinceLaunch > 0) {
+    //     sleep(3000);
+    //     MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaignsList", {tostring(12 * yrsSinceLaunch), "12"});
+    //     yrsSinceLaunch--;
+    // }
 #endif
 }
 

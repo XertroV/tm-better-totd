@@ -645,24 +645,28 @@ class LazyMap {
 
     void LoadThisMapBlocking() {
         bool isLive = startTimestamp <= Time::Stamp && Time::Stamp < endTimestamp;
-        string settings = """<root>
-				<setting name="S_CampaignId" value="_DailyMap.CampaignId" type="integer"/>
-				<setting name="S_CampaignMonthlyId" value="_CurrentCampaign.Id" type="integer"/>
-				<setting name="S_CampaignType" value="1" type="integer"/>
-				<setting name="S_CampaignIsLive" value="IsCampaignLive" type="boolean"/>
-			</root>""";
-        settings = settings
-            .Replace("IsCampaignLive", isLive ? "1" : "0")
-            .Replace("_DailyMap.CampaignId", tostring(totdEntry.campaignId))
-            .Replace("_CurrentCampaign.Id", monthCampaignId);
-        log_trace("Loading map with settings: " + settings);
+        // string settings = """<root>
+		// 		<setting name="S_CampaignId" value="_DailyMap.CampaignId" type="integer"/>
+		// 		<setting name="xS_CampaignMonthlyId" value="_CurrentCampaign.Id" type="integer"/>
+		// 		<setting name="S_CampaignType" value="0" type="integer"/>
+		// 		<setting name="S_CampaignIsLive" value="IsCampaignLive" type="boolean"/>
+		// 	</root>""";
+        // settings = settings
+        //     .Replace("IsCampaignLive", isLive ? "1" : "0")
+        //     .Replace("_DailyMap.CampaignId", tostring(totdEntry.campaignId))
+        //     .Replace("_CurrentCampaign.Id", monthCampaignId);
+        // log_trace("Loading map with settings: " + settings);
+        string settings = "";
+        Notify("Loading " + cleanName);
 #if DEPENDENCY_MLHOOK
         if (Meta::GetPluginFromID("MLHook").Enabled) {
+            // MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaignsList", {tostring(TOTD::maxMonthIx - monthIx), "12"});
+            // sleep(500);
             // we need this call to have the in-game menu load correctly.
-            MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaign", {monthCampaignId});
+            // MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaign", {monthCampaignId});
             MLHook::Queue_Menu_SendCustomEvent("Event_UpdateLoadingScreen", {rawName});
             // give a chance for the ML to load the monthly stuff since the menu ML gets paused once we're in-map
-            sleep(200);
+            // sleep(500);
         }
 #endif
         LoadMapNowWrapper(mapUrl, settings);

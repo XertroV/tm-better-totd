@@ -11,8 +11,8 @@ void LoadMapNowWrapper(const string &in url, const string &in settings) {
     // PlayMap ui is better than bad campaign ui
 #if DEPENDENCY_MLHOOK
     if (Meta::GetPluginFromID("MLHook").Enabled) {
-        LoadMapNow(url, "TrackMania/TM_Campaign_Local", settings);
-        return;
+        // LoadMapNow(url, "TrackMania/TM_Campaign_Local", settings);
+        // return;
     }
 #endif
     LoadMapNow(url, "", settings);
