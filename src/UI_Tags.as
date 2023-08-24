@@ -215,12 +215,19 @@ bool TrackMatchesTagsFilters(TmxMapInfo@ info) {
     if (info is null || info.TagList.Length == 0) return false;
     if (g_TrackTagsModeExclusive) {
         for (uint i = 0; i < info.TagList.Length; i++) {
-            if (!tags[info.TagList[i] - 1].checked) return false;
+            if (info.TagList[i] - 1 < tags.Length) {
+                if (!tags[info.TagList[i] - 1].checked) return false;
+            }
         }
         return true;
     } else {
         for (uint i = 0; i < info.TagList.Length; i++) {
-            if (tags[info.TagList[i] - 1].checked) return true;
+            if (info.TagList[i] - 1 < tags.Length) {
+                if (tags[info.TagList[i] - 1].checked) return true;
+            } else {
+                // trace(tostring(info.TagList[i]));
+                // todo: add 48
+            }
         }
         return false;
     }
