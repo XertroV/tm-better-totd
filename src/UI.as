@@ -429,6 +429,21 @@ void FiltersThirdRow() {
         }
         UI::EndCombo();
     }
+
+    UI::SameLine();
+    if (UI::Button(Icons::Play + " Random")) {
+        startnew(PickRandomFromFiltered);
+    }
+}
+
+void PickRandomFromFiltered() {
+    if (filteredTotds.Length == 0) {
+        NotifyError("Can't pick a random map when there are 0 to pick from.");
+        return;
+    }
+    auto choice = Math::Rand(0, filteredTotds.Length);
+    auto map = filteredTotds[choice];
+    map.LoadThisMapBlocking();
 }
 
 string[]@ f_authorParts;
