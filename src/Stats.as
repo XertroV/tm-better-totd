@@ -61,6 +61,13 @@ const string iconSilver = "\\$899" + Icons::Circle + " \\$z";
 const string iconGold = "\\$db4" + Icons::Circle + " \\$z";
 const string iconAuthor = "\\$071" + Icons::Circle + " \\$z";
 
+const vec4 colUnplayed = vec4(4. / 15., 4. / 15., 4. / 15., 1.0);
+const vec4 colPlayed = vec4(4. / 15., 4. / 15., 4. / 15., 1.0);
+const vec4 colBronze = vec4(9. / 15., 6. / 15., 4. / 15., 1.0);
+const vec4 colSilver = vec4(8. / 15., 9. / 15., 9. / 15., 1.0);
+const vec4 colGold = vec4(13. / 15., 11. / 15., 4. / 15., 1.0);
+const vec4 colAuthor = vec4(0. / 15., 7. / 15., 1. / 15., 1.0);
+
 array<string> medalIconsArr = {iconAuthor, iconGold, iconSilver, iconBronze, iconPlayed, iconUnplayed};
 
 const string GetMedalIcon(int medal) {
@@ -195,13 +202,21 @@ class Stats {
         }
         auto map1 = maps[0];
         int calStartOff = map1.weekDay;
-        auto width = UI::GetWindowContentRegionWidth();
+        UI::NewLine();
+        float width = UI::GetWindowContentRegionWidth();
         auto fp = UI::GetStyleVarVec2(UI::StyleVar::FramePadding);
         auto colWidth = width / 8.;
-        float tableWidth = width / 8. * 7.;
-        UI::SetCursorPos(UI::GetCursorPos() + vec2(colWidth / 2., 0));
+        UI::Dummy(vec2(colWidth / 2. - fp.x, 0));
+        UI::SameLine();
         vec2 btnSize = vec2(colWidth - fp.x, 50.);
-        if (UI::BeginTable("month-table-" + map1.monthIx, 7, UI::TableFlags::None, vec2(tableWidth, 0))) {
+        if (UI::BeginTable("month-table-" + map1.monthIx, 7, UI::TableFlags::None)) {
+            UI::TableSetupColumn("1", UI::TableColumnFlags::WidthFixed, btnSize.x);
+            UI::TableSetupColumn("2", UI::TableColumnFlags::WidthFixed, btnSize.x);
+            UI::TableSetupColumn("3", UI::TableColumnFlags::WidthFixed, btnSize.x);
+            UI::TableSetupColumn("4", UI::TableColumnFlags::WidthFixed, btnSize.x);
+            UI::TableSetupColumn("5", UI::TableColumnFlags::WidthFixed, btnSize.x);
+            UI::TableSetupColumn("6", UI::TableColumnFlags::WidthFixed, btnSize.x);
+            UI::TableSetupColumn("7", UI::TableColumnFlags::WidthFixed, btnSize.x);
             // skip to day of first map
             for (int i = 0; i < calStartOff; i++) {
                 UI::TableNextColumn();
@@ -233,7 +248,6 @@ void DrawNextTotdCountdownButton(vec2 size) {
     auto endPos = UI::GetCursorPos();
 
     UI::PushFont(g_MidFont);
-    // auto fontH = UI::GetTextLineHeight();
     auto timeLeft = "Next TOTD\n" + Time::Format(Math::Max(0, newTotdAt - Time::Stamp) * 1000, false, true, true);
     auto textSz = Draw::MeasureString(timeLeft);
     UI::SetCursorPos(pos + size * vec2(.5, .5) - textSz / 2.);
@@ -241,7 +255,6 @@ void DrawNextTotdCountdownButton(vec2 size) {
     UI::Text(timeLeft);
     UI::PopStyleColor();
     UI::PopFont();
-    UI::SetCursorPos(endPos);
 }
 
 

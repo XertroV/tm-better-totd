@@ -67,7 +67,7 @@ const string LengthAndOffset(uint length, uint offset) {
 
 
 Net::HttpRequest@ PluginRequest(const string &in url) {
-    auto r = Net::HttpRequest();
+    Net::HttpRequest@ r = Net::HttpRequest();
     r.Url = url;
     r.Headers['User-Agent'] = "TM_Plugin:" + Meta::ExecutingPlugin().Name + " / contact=@XertroV,m@xk.io / client_version=" + Meta::ExecutingPlugin().Version;
     return r;

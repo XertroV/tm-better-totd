@@ -606,6 +606,18 @@ class LazyMap {
         return iconUnplayed;
     }
 
+    const vec4 GetPlayerMedalColor() {
+        if (playerRecordTime < -1 || medals[0] < 0) return colUnplayed;
+        if (playerRecordTime > 0) {
+            if (playerRecordTime <= medals[0]) return colAuthor;
+            if (playerRecordTime <= medals[1]) return colGold;
+            if (playerRecordTime <= medals[2]) return colSilver;
+            if (playerRecordTime <= medals[3]) return colBronze;
+            return colPlayed;
+        }
+        return colUnplayed;
+    }
+
     void DrawCalendarButton(vec2 size) {
         auto pos = UI::GetCursorPos();
         UI::PushID(uid);
@@ -622,7 +634,11 @@ class LazyMap {
         UI::PushStyleColor(UI::Col::Text, vec4(1, 1, 1, .5));
         UI::Text(tostring(day) + ".");
         UI::PopStyleColor();
-        UI::SetCursorPos(pos + size * vec2(.5, .5) - vec2(fontH/2.66, fontH/2.) * .9);
+        UI::Dummy(vec2(0, 12));
+
+        auto medalPos = pos + size * vec2(.5, .5) - vec2(fontH/2.66, fontH/2.) * 0.9;
+
+        UI::SetCursorPos(medalPos);
         UI::Text(playerMedalLabel);
         UI::PopFont();
 
