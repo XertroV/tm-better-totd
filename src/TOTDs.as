@@ -634,7 +634,7 @@ class LazyMap {
         UI::PushStyleColor(UI::Col::Text, vec4(1, 1, 1, .5));
         UI::Text(tostring(day) + ".");
         UI::PopStyleColor();
-        UI::Dummy(vec2(0, 12));
+        UI::Dummy(vec2(size.x, 14.));
 
         auto medalPos = pos + size * vec2(.5, .5) - vec2(fontH/2.66, fontH/2.) * 0.9;
 
