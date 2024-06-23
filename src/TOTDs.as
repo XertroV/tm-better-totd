@@ -321,7 +321,6 @@ void OnMapChanged() {
 }
 
 
-
 uint lastTime = 0;
 uint rateLimitMs = 200;
 
@@ -531,6 +530,35 @@ class LazyMap {
         startnew(CoroutineFunc(LoadRecord));
     }
 
+
+    void WatchMapForFinishAsync() {
+        auto app = GetApp();
+        while (app.RootMap is null || app.CurrentPlayground is null) yield();
+        if (app.RootMap.Id.GetName() != uid) return;
+        auto mapIdValue = app.RootMap.Id.Value;
+        bool wasFinish = false;
+        while (app.RootMap !is null && app.RootMap.Id.Value == mapIdValue) {
+            if (app.CurrentPlayground is null) break;
+            if (wasFinish) {
+                if (app.CurrentPlayground.UIConfigs[0].UISequence != CGamePlaygroundUIConfig::EUISequence::Finish) {
+                    wasFinish = false;
+                }
+            } else {
+                if (app.CurrentPlayground.UIConfigs[0].UISequence == CGamePlaygroundUIConfig::EUISequence::Finish) {
+                    startnew(CoroutineFunc(OnHitFinishPlayingMapAsync));
+                    wasFinish = true;
+                }
+            }
+            yield();
+        }
+    }
+
+    void OnHitFinishPlayingMapAsync() {
+        sleep(200);
+        this.ReloadRecord();
+    }
+
+
     void DrawTableRow() {
         UI::PushID(uid);
         UI::TableNextRow();
@@ -685,6 +713,7 @@ class LazyMap {
             // sleep(500);
         }
 #endif
+        startnew(CoroutineFunc(WatchMapForFinishAsync));
         LoadMapNowWrapper(mapUrl, settings);
     }
 
