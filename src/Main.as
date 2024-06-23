@@ -99,7 +99,8 @@ uint lastNextTrackKeyPress = 0;
 */
 UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     if (down) {
-        if (key == S_NextTrackHotkey && Time::Now - lastNextTrackKeyPress > 1000) {
+        if (key == S_NextTrackHotkey && S_EnableNextTrackHotkey && Time::Now - lastNextTrackKeyPress > 1000) {
+            // note: will check map UID is what we expect to avoid triggering in other maps
             startnew(LoadNextTrackAsync);
         }
     }
@@ -120,8 +121,11 @@ void SetMapLoadedSource(TrackLoadSrc src, int filteredIx = -1) {
 }
 
 void LoadNextTrackAsync() {
+    if (g_LastLoadedMap is null) return;
     auto app = GetApp();
     if (app.RootMap is null) return;
+    if (app.RootMap.Id.GetName() != g_LastLoadedMap.uid) return;
+
     if (g_LastLoadedMapSource == TrackLoadSrc::Random) {
         PickRandomFromFiltered();
     } else if (g_LastLoadedMapSource == TrackLoadSrc::Filtered) {

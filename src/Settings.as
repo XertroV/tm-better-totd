@@ -16,5 +16,8 @@ enum AutoLoadTOTD {
 [Setting category="General" name="Auto-load new TOTDs" description="This will load fresh track of the days the second they become available. It will never do this if you are in the editor."]
 AutoLoadTOTD S_InstaLoadTOTD = AutoLoadTOTD::Never;
 
+[Setting category="General" name="Enable Next Track Hotkey" description="Enable the 'next map' hotkey."]
+bool S_EnableNextTrackHotkey = false;
+
 [Setting category="General" name="Next Track Hotkey" description="After loading a map, pressing this will go to the next map in the list. Default: Oem6 = `]`"]
 VirtualKey S_NextTrackHotkey = VirtualKey::Oem6;
