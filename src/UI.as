@@ -310,7 +310,7 @@ void DrawTotdTableInner() {
     UI::ListClipper clip(filteredTotds.Length);
     while (clip.Step()) {
         for (int i = clip.DisplayStart; i < clip.DisplayEnd; i++) {
-            filteredTotds[i].DrawTableRow();
+            filteredTotds[i].DrawTableRow(i);
         }
     }
 }
@@ -443,6 +443,7 @@ void PickRandomFromFiltered() {
     }
     auto choice = Math::Rand(0, filteredTotds.Length);
     auto map = filteredTotds[choice];
+    SetMapLoadedSource(TrackLoadSrc::Random);
     map.LoadThisMapBlocking();
 }
 

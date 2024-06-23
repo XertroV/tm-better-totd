@@ -93,6 +93,59 @@ void RenderInterface() {
     UI::PopStyleColor();
 }
 
+uint lastNextTrackKeyPress = 0;
+
+/** Called whenever a key is pressed on the keyboard. See the documentation for the [`VirtualKey` enum](https://openplanet.dev/docs/api/global/VirtualKey).
+*/
+UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
+    if (down) {
+        if (key == S_NextTrackHotkey && Time::Now - lastNextTrackKeyPress > 1000) {
+            startnew(LoadNextTrackAsync);
+        }
+    }
+    return UI::InputBlocking::DoNothing;
+}
+
+enum TrackLoadSrc {
+    Filtered, Random, Calendar
+}
+
+TrackLoadSrc g_LastLoadedMapSource = TrackLoadSrc::Random;
+int g_LastLoadedMapFilteredIx = -1;
+LazyMap@ g_LastLoadedMap;
+
+void SetMapLoadedSource(TrackLoadSrc src, int filteredIx = -1) {
+    g_LastLoadedMapSource = src;
+    g_LastLoadedMapFilteredIx = filteredIx;
+}
+
+void LoadNextTrackAsync() {
+    auto app = GetApp();
+    if (app.RootMap is null) return;
+    if (g_LastLoadedMapSource == TrackLoadSrc::Random) {
+        PickRandomFromFiltered();
+    } else if (g_LastLoadedMapSource == TrackLoadSrc::Filtered) {
+        if (filteredTotds.Length == 0) {
+            NotifyWarning("No filtered track to load.");
+            return;
+        }
+        auto ix = (g_LastLoadedMapFilteredIx + 1) % filteredTotds.Length;
+        g_LastLoadedMapFilteredIx = ix;
+        filteredTotds[ix].LoadThisMapBlocking();
+    } else if (g_LastLoadedMapSource == TrackLoadSrc::Calendar) {
+        if (g_LastLoadedMap is null) {
+            NotifyWarning("No calendar track to load.");
+            return;
+        }
+        auto ix = allTotds.FindByRef(g_LastLoadedMap);
+        if (ix == -1) {
+            NotifyWarning("Calendar track not found.");
+            return;
+        }
+        ix = (ix + 1) % allTotds.Length;
+        allTotds[ix].LoadThisMapBlocking();
+    }
+}
 
 
 // string tmxIdToUrl(const string &in id) {

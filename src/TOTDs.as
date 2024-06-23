@@ -455,9 +455,9 @@ class LazyMap {
             return;
         }
 
-        name = ColoredString(map.Name);
+        name = Text::OpenplanetFormatCodes(map.Name);
         rawName = map.Name;
-        cleanName = StripFormatCodes(map.Name);
+        cleanName = Text::StripFormatCodes(map.Name);
         author = map.AuthorDisplayName;
         authorByLine = "\\$888by \\$z" + author;
         authorTime = Time::Format(map.AuthorScore);
@@ -533,6 +533,8 @@ class LazyMap {
 
     void WatchMapForFinishAsync() {
         auto app = GetApp();
+        // if we start in another map, wait till our map
+        while (app.RootMap !is null && app.RootMap.Id.GetName() != uid) yield();
         while (app.RootMap is null || app.CurrentPlayground is null) yield();
         if (app.RootMap.Id.GetName() != uid) return;
         auto mapIdValue = app.RootMap.Id.Value;
@@ -559,7 +561,7 @@ class LazyMap {
     }
 
 
-    void DrawTableRow() {
+    void DrawTableRow(int ix) {
         UI::PushID(uid);
         UI::TableNextRow();
         UI::TableNextColumn();
@@ -591,6 +593,7 @@ class LazyMap {
         }
         UI::TableNextColumn();
         if (UI::Button("Play")) {
+            SetMapLoadedSource(TrackLoadSrc::Filtered, ix);
             startnew(CoroutineFunc(LoadThisMapBlocking));
         }
         UI::SameLine();
@@ -683,10 +686,12 @@ class LazyMap {
 
         if (pressed) {
             log_info("Play map: " + name);
+            SetMapLoadedSource(TrackLoadSrc::Calendar);
             startnew(CoroutineFunc(LoadThisMapBlocking));
         }
     }
 
+    // set g_LastLoadedMapFromFiltered and g_LastLoadedMapFilteredIx before calling this
     void LoadThisMapBlocking() {
         bool isLive = startTimestamp <= Time::Stamp && Time::Stamp < endTimestamp;
         // string settings = """<root>
@@ -702,6 +707,7 @@ class LazyMap {
         // log_trace("Loading map with settings: " + settings);
         string settings = "";
         Notify("Loading " + cleanName);
+        @g_LastLoadedMap = this;
 #if DEPENDENCY_MLHOOK
         if (Meta::GetPluginFromID("MLHook").Enabled) {
             // MLHook::Queue_Menu_SendCustomEvent("TMNext_CampaignStore_Action_LoadMonthlyCampaignsList", {tostring(TOTD::maxMonthIx - monthIx), "12"});
