@@ -477,9 +477,15 @@ class LazyMap {
 
     string playerMedalLabel = Icons::QuestionCircle;
     void LoadRecord() {
-        _SetPlayerRecordTime(int(Map_GetRecord_v2(uid)));
+        bool isInit = playerRecordTime == -2;
+        bool newPb = _SetPlayerRecordTime(int(Map_GetRecord_v2(uid)));
         UpdateMedalsInfo();
-        startnew(CoroutineFunc(LoadRecordFromAPI));
+        if (newPb) {
+            playerRecordTimestamp = Time::Stamp;
+        }
+        if (isInit) {
+            startnew(CoroutineFunc(LoadRecordFromAPI));
+        }
     }
 
     bool rateLimitGetPb = true;
@@ -503,12 +509,15 @@ class LazyMap {
         UpdateMedalsInfo();
     }
 
-    void _SetPlayerRecordTime(int time) {
+    // returns if time improved compared to last and we already had a time
+    bool _SetPlayerRecordTime(int time) {
+        bool timeBetter = playerRecordTime > 0 && time < playerRecordTime;
         playerRecordTime = time;
         if (playerRecordTime > 0) {
             playerRecordTimeStrShort = "\\$s" + Time::Format(playerRecordTime, true, false);
             playerRecordTimeStr = Time::Format(playerRecordTime);
         }
+        return timeBetter;
     }
 
     void UpdateMedalsInfo() {

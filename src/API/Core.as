@@ -59,7 +59,7 @@ CMapRecord@ GetPlayerRecordOnMap(const string &in mapUid) {
     auto userId = mccma.UserMgr.Users[0].Id;
     MwFastBuffer<wstring> wsids = MwFastBuffer<wstring>();
     wsids.Add(mccma.LocalUser.WebServicesUserId);
-    auto task = mccma.ScoreMgr.Map_GetPlayerListRecordList(userId, wsids, mapUid, "PersonalBest", "", "", "");
+    auto task = mccma.ScoreMgr.Map_GetPlayerListRecordList(userId, wsids, mapUid, "PersonalBest", "", "TimeAttack", "");
     WaitAndClearTaskLater(task, mccma.ScoreMgr);
     if (task.HasFailed || !task.HasSucceeded) {
         log_warn("Failed to get player record on map: " + mapUid + ' // Error: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription);
