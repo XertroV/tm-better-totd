@@ -293,6 +293,31 @@ void PopulateMapInfos() {
     }
 }
 
+bool isBgGetPbsRunning = false;
+void GetSomeMissingPBs() {
+    if (isBgGetPbsRunning) return;
+    isBgGetPbsRunning = true;
+    uint i = 0;
+    while (i < allTotds.Length) {
+        uint c = 0;
+        while (c < 20 && i < allTotds.Length) {
+            auto lm = allTotds[i++];
+            if (lm.startedLoadingRecord) continue;
+            lm.StartLoadRecordInBg();
+            // sleep(50);
+            yield();
+            c++;
+        }
+        if (c >= 20) {
+            // return here so we can leave this true once we've gone through all maps
+            yield();
+            isBgGetPbsRunning = false;
+            return;
+        }
+        break;
+    }
+}
+
 string g_mapUid;
 string g_lastMapUid;
 void WatchForMapChange() {
@@ -407,7 +432,6 @@ class LazyMap {
         startTimestamp = totd.startTimestamp;
         endTimestamp = totd.endTimestamp;
         date = tostring(this.year) + '-' + Text::Format('%02d', month) + '-' + Text::Format('%02d', day);
-        startnew(CoroutineFunc(LoadRecord));
 
         int yrOffs = this.year - 2020;
         int monthOffs = month - 1;
@@ -443,11 +467,11 @@ class LazyMap {
     int monthIx = 0;
 
     // load just this map -- don't use this except like manually refreshing.
-    void LoadMap() {
-        RateLimit();
-        auto map = GetMapFromUid(uid);
-        SetMapInfoFrom(map);
-    }
+    // void LoadMap() {
+    //     RateLimit();
+    //     auto map = GetMapFromUid(uid);
+    //     SetMapInfoFrom(map);
+    // }
 
     void SetMapInfoFrom(CNadeoServicesMap@ map) {
         if (map is null) {
@@ -475,6 +499,25 @@ class LazyMap {
         MapInfoLoaded = true;
     }
 
+    bool get_IsPbLoaded() {
+        return playerRecordTime >= -1;
+    }
+
+    bool startedLoadingRecord = false;
+    int get_PlayerRecordTime() {
+        if (!startedLoadingRecord) {
+            StartLoadRecordInBg();
+        }
+        return playerRecordTime;
+    }
+
+    void StartLoadRecordInBg() {
+        if (!startedLoadingRecord) {
+            startedLoadingRecord = true;
+            startnew(CoroutineFunc(LoadRecord));
+        }
+    }
+
     string playerMedalLabel = Icons::QuestionCircle;
     void LoadRecord() {
         bool isInit = playerRecordTime == -2;
@@ -488,7 +531,7 @@ class LazyMap {
         }
     }
 
-    bool rateLimitGetPb = true;
+    bool rateLimitGetPb = false;
 
     void LoadRecordFromAPI() {
         PbReqStarted(uid);
@@ -512,6 +555,7 @@ class LazyMap {
     // returns if time improved compared to last and we already had a time
     bool _SetPlayerRecordTime(int time) {
         bool timeBetter = playerRecordTime > 0 && time < playerRecordTime;
+        timeBetter = timeBetter || playerRecordTime < 0;
         playerRecordTime = time;
         if (playerRecordTime > 0) {
             playerRecordTimeStrShort = "\\$s" + Time::Format(playerRecordTime, true, false);
@@ -588,7 +632,7 @@ class LazyMap {
         UI::TableNextColumn();
         UI::Text(playerMedalLabel);
         UI::TableNextColumn();
-        if (playerRecordTime < -1) UI::Text(HourGlassAnim());
+        if (PlayerRecordTime < -1) UI::Text(HourGlassAnim());
         else UI::Text(playerRecordTimeStr);
         UI::TableNextColumn();
         if (playerRecordTimestamp > 0)
@@ -624,7 +668,7 @@ class LazyMap {
     }
 
     const string GetPlayerMedal() {
-        if (playerRecordTime < -1 || medals[0] < 0) return "??";
+        if (PlayerRecordTime < -1 || medals[0] < 0) return "??";
         if (playerRecordTime > 0) {
             if (playerRecordTime <= medals[0]) return "AT";
             if (playerRecordTime <= medals[1]) return "Gold";
@@ -682,7 +726,7 @@ class LazyMap {
         UI::Text(playerMedalLabel);
         UI::PopFont();
 
-        if (playerRecordTime > 0) {
+        if (PlayerRecordTime > 0) {
             // auto smallFontH = UI::GetTextLineHeight();
             UI::PushFont(g_BoldFont);
             auto recSz = Draw::MeasureString(playerRecordTimeStrShort);
@@ -756,7 +800,7 @@ class LazyMap {
     }
 
     void PBText() {
-        if (playerRecordTime < 0) UI::Text("No PB");
+        if (PlayerRecordTime < 0) UI::Text("No PB");
         else UI::Text("PB " + playerRecordTimeStr);
     }
 

@@ -278,6 +278,7 @@ float dateWidth = 50;
 float timeWidth = 60;
 float atCountWidth = 60;
 void DrawTotdAll() {
+    startnew(GetSomeMissingPBs);
     globalStats.DrawStatus();
     DrawTotdFilters();
     UI::Separator();
