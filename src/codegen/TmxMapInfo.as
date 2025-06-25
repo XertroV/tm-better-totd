@@ -9,8 +9,11 @@ class TmxMapInfo {
   TmxMapInfo(uint TrackID, const string &in Name, MaybeOfString@ Tags, const int[] &in TagList) {
     this._TrackID = TrackID;
     this._Name = Name;
-    @this._Tags = Tags;
-    this._TagList = TagList;
+
+    if (Tags != "") {
+      @this._Tags = Tags;
+      this._TagList = TagList;
+    }
   }
 
   /* Methods // Mixin: ToFrom JSON Object */
@@ -19,10 +22,16 @@ class TmxMapInfo {
     this._Name = string(j["Name"]);
     @this._Tags = MaybeOfString(j["Tags"]);
     auto tagsStr = _Tags.GetOr("");
-    auto tags = tagsStr.Split(",");
-    this._TagList = array<int>(tags.Length);
-    for (uint i = 0; i < tags.Length; i++) {
-      this._TagList[i] = Text::ParseInt(tags[i]);
+
+    if (tagsStr != "") {
+      auto tags = tagsStr.Split(",");
+      this._TagList = array<int>(tags.Length);
+      for (uint i = 0; i < tags.Length; i++) {
+        int tagId;
+        if (Text::TryParseInt(tags[i], tagId) && tagId > 0 && tagId <= NUM_TAGS) {
+          this._TagList[i] = tagId;
+        }
+      }
     }
   }
 
