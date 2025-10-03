@@ -176,33 +176,33 @@ int Less_AuthorName(LazyMap@ m1, LazyMap@ m2) {
     return 0;
 }
 int Less_AuthorTime(LazyMap@ m1, LazyMap@ m2) {
-    if (m1.medals[0] == m2.medals[0]) return 0;
+    if (m1.medals[0] == m2.medals[0]) return Less_NewFirst(m1, m2);
     if (m1.medals[0] <= -1) return 1;
     if (m2.medals[0] <= -1) return -1;
     return Math::Clamp(m1.medals[0] - m2.medals[0], -1, 1);
 }
 int Less_FewestATs(LazyMap@ m1, LazyMap@ m2) {
-    if (m1.AtCount == m2.AtCount) return 0;
+    if (m1.AtCount == m2.AtCount) return Less_NewFirst(m1, m2);
     if (m1.AtCount <= -1) return 1;
     if (m2.AtCount <= -1) return -1;
     return Math::Clamp(m1.AtCount - m2.AtCount, -1, 1);
 }
 int Less_MostATs(LazyMap@ m1, LazyMap@ m2) {
-    if (m1.AtCount == m2.AtCount) return 0;
+    if (m1.AtCount == m2.AtCount) return Less_NewFirst(m1, m2);
     if (m1.AtCount <= -1) return 1;
     if (m2.AtCount <= -1) return -1;
     return Math::Clamp(m2.AtCount - m1.AtCount, -1, 1);
 }
 
 int Less_PB_NewFirst(LazyMap@ m1, LazyMap@ m2) {
-    if (m1.playerRecordTimestamp == m2.playerRecordTimestamp) return 0;
+    if (m1.playerRecordTimestamp == m2.playerRecordTimestamp) return Less_NewFirst(m1, m2);
     if (m1.playerRecordTimestamp <= -1) return 1;
     if (m2.playerRecordTimestamp <= -1) return -1;
     return Math::Clamp(m2.playerRecordTimestamp - m1.playerRecordTimestamp, -1, 1);
 }
 
 int Less_PB_OldFirst(LazyMap@ m1, LazyMap@ m2) {
-    if (m1.playerRecordTimestamp == m2.playerRecordTimestamp) return 0;
+    if (m1.playerRecordTimestamp == m2.playerRecordTimestamp) return Less_NewFirst(m1, m2);
     if (m1.playerRecordTimestamp <= -1) return 1;
     if (m2.playerRecordTimestamp <= -1) return -1;
     return Math::Clamp(m1.playerRecordTimestamp - m2.playerRecordTimestamp, -1, 1);
