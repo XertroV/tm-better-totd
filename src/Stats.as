@@ -247,7 +247,7 @@ void DrawNextTotdCountdownButton(vec2 size) {
     UI::EndDisabled();
     auto endPos = UI::GetCursorPos();
 
-    UI::PushFont(g_MidFont);
+    UI_PushFont_Mid();
     auto timeLeft = "Next TOTD\n" + Time::Format(Math::Max(0, newTotdAt - Time::Stamp) * 1000, false, true, true);
     auto textSz = Draw::MeasureString(timeLeft);
     UI::SetCursorPos(pos + size * vec2(.5, .5) - textSz / 2.);

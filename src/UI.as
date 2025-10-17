@@ -1,7 +1,12 @@
-UI::Font@ g_LargeFont = UI::LoadFont("DroidSans.ttf", 26, -1, -1, true, true, true);
-UI::Font@ g_MidFont = UI::LoadFont("DroidSans.ttf", 20, -1, -1, true, true, true);
-UI::Font@ g_BoldFont = UI::LoadFont("DroidSans-Bold.ttf", 16, -1, -1, true, true, true);
+UI::Font@ g_BoldFont = UI::Font::DefaultBold;
 
+void UI_PushFont_Large() {
+    UI::PushFont(UI::Font::Default, 26.0);
+}
+
+void UI_PushFont_Mid() {
+    UI::PushFont(UI::Font::Default, 20.0);
+}
 
 void RenderMainWindowInner() {
     if (!UserHasPermissions) {
@@ -83,14 +88,14 @@ void DrawCampaignOverview(int ix) {
     auto lineHeight = UI::GetTextLineHeightWithSpacing() + fp.y; // / 2.;
     UI::TableNextRow();
     UI::TableNextColumn();
-    UI::PushFont(g_LargeFont);
+    UI_PushFont_Large();
     UI::SetCursorPos(UI::GetCursorPos() + vec2(10, (lineHeight * 3. + fp.y) / 2. - (26. + fp.y) / 2));
     UI::Text(CampaignYr(ix) + "  ");
     UI::PopFont();
     UI::TableNextColumn();
     DrawCampaignRowMonthsInner(ix);
     UI::TableNextColumn();
-    UI::PushFont(g_LargeFont);
+    UI_PushFont_Large();
     auto btnPrePos = UI::GetCursorPos();
     UI::Dummy(vec2(lineHeight * 3. + fp.y));
     UI::SetCursorPos(btnPrePos + vec2(0, fp.y));
@@ -192,7 +197,7 @@ void DrawStatsByMonth() {
 void DrawMonthDetails(uint mIx, bool drawMonthTitle = true) {
     if (mIx >= monthStats.Length) return;
     if (drawMonthTitle) {
-        UI::PushFont(g_MidFont);
+        UI_PushFont_Mid();
         UI::AlignTextToFramePadding();
         UI::Text(MonthStr(mIx));
         UI::PopFont();

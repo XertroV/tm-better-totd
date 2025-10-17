@@ -712,7 +712,7 @@ class LazyMap {
         UI::PopID();
         auto endPos = UI::GetCursorPos();
 
-        UI::PushFont(g_LargeFont);
+        UI_PushFont_Large();
         auto fontH = UI::GetTextLineHeight();
         UI::SetCursorPos(pos + size * vec2(.05, .5) - vec2(0, fontH/2.));
         UI::PushStyleColor(UI::Col::Text, vec4(1, 1, 1, .5));
@@ -779,7 +779,7 @@ class LazyMap {
     void DrawMapTooltip() {
         UI::BeginTooltip();
 
-        UI::PushFont(g_MidFont);
+        UI_PushFont_Mid();
         UI::AlignTextToFramePadding();
         UI::Text(name);
         UI::PopFont();

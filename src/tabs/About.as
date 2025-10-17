@@ -22,7 +22,7 @@ void DrawAboutTabInner() {
 
 namespace About {
     void MainTitle() {
-        UI::PushFont(g_LargeFont);
+        UI_PushFont_Large();
         UI::AlignTextToFramePadding();
         UI::Text(FullWindowTitle);
         UI::PopFont();
