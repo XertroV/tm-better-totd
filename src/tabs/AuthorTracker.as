@@ -58,14 +58,10 @@ namespace AuthorTracker {
         }
     }
 
-    const string UrlForGetPlayersInfo(const string &in wsid) {
-        return "https://www.author-tracker.com/api/v1/player/" + wsid;
-    }
-
     int nbReqs = 0;
     string lastGetPlayersInfoRaw;
     Json::Value@ GetPlayersInfo(const string &in wsid) {
-        string url = "https://www.author-tracker.com/api/v1/player/" + wsid;
+        string url = "https://author-tracker.socr.am/api/nadeo/totdAtCount";
         auto req = PluginGetRequest(url);
         nbReqs++;
         req.Start();
@@ -76,7 +72,7 @@ namespace AuthorTracker {
             return GetPlayersInfo(SPAMS_WSID);
         }
         if (req.ResponseCode() >= 400 || req.Error().Length > 0) {
-            log_warn("Failed to get player info from author-tracker.com. Error: " + req.Error());
+            log_warn("Failed to get player info from author-tracker.socr.am. Error: " + req.Error());
             return null;
         }
         lastGetPlayersInfoRaw = req.String();
@@ -112,7 +108,7 @@ namespace AuthorTracker {
     }
 
     const string PlayersRanking() {
-        if (data is null) return "Unknown";
+        if (data is null) return "Coming soon...";
         try {
             if (string(data.Get('player').Get('id')) != LocalAccountId) {
                 return "Unranked";
@@ -120,7 +116,7 @@ namespace AuthorTracker {
             return tostring(int(data.Get('rank')));
 
         } catch {}
-        return "Unknown";
+        return "Coming soon...";
     }
 
     void DrawTab() {

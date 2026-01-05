@@ -66,7 +66,7 @@ namespace About {
 
     void UtilButtons() {
         if (UI::Button("Your Author Tracker rank: " + AuthorTracker::PlayersRanking())) {
-            OpenBrowserURL("https://www.author-tracker.com/player/" + LocalAccountId);
+            OpenBrowserURL("https://www.author-tracker.socr.am");
         }
     }
 

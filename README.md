@@ -9,7 +9,7 @@ Features:
 * Filter TOTDs by date, medals, author, track name, TMX tags.
 * Sort by date, PB date, track name, author name, # ATs.
 * Auto-load new TOTDs the second they become available.
-* Integration with [Author-Tracker.com](https://author-tracker.com).
+* Integration with [Author-Tracker.socr.am](https://author-tracker.socr.am).
 * Quick buttons for tm.io and TMX.
 * Great UI & Instant PB loading.
 
