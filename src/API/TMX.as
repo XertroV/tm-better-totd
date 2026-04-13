@@ -1,6 +1,6 @@
 namespace TMX {
     const string getMapByUidEndpoint = "https://trackmania.exchange/api/maps?fields=Tags,Name,MapId,MapUid&uid={uid}";
-    const int maxUrlLength = 1000;
+    const int maxTmxUidsLength = 60; 
     // <https://api2.mania.exchange/Method/Index/53>
     Json::Value@ GetMapFromUid(const string &in uid) {
         string url = getMapByUidEndpoint.Replace("{id}", uid);
@@ -16,9 +16,9 @@ namespace TMX {
     }
 
     // <https://api2.mania.exchange/Method/Index/53>
-    Json::Value@ GetMapsByUids(string[] &in uids) {
+    Json::Value@ GetMapsByUids(string[] &in uids) {        
+        if (uids.Length > maxTmxUidsLength) throw("Too many uids passed in at once");
         string url = getMapByUidEndpoint.Replace("{uid}", string::Join(uids, ","));
-        if (url.Length > maxUrlLength) throw("Too many uids passed in at once");
         auto req = PluginGetRequest(url);
         req.Start();
         while (!req.Finished()) yield();

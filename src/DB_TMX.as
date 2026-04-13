@@ -28,8 +28,6 @@ void ScanForMissingTmx() {
 }
 
 int nbTmxReqs = 0;
-int requestLength = 0;
-int maxUriLength = 800; // TMX has a limit of 1000 chars for the URI. So we set out URI length lower to account for the rest of the URL.
 
 void CacheTmxInfoFor(string[] &in allUids) {
     log_trace("Syncing " + allUids.Length + " maps via TMX");
@@ -37,12 +35,10 @@ void CacheTmxInfoFor(string[] &in allUids) {
     string[] uids = {};
     for (uint i = 0; i < allUids.Length; i++) {
         uids.InsertLast(allUids[i]);
-        requestLength += allUids[i].Length;
-        if (requestLength >= maxUriLength) {
+        if (uids.Length >= TMX::maxTmxUidsLength) {
             CacheTmxInfoForChunk(uids);
             nbTmxReqs -= uids.Length;
             uids.RemoveRange(0, uids.Length);
-            requestLength = 0;
         }
     }
     if (uids.Length > 0) CacheTmxInfoForChunk(uids);
