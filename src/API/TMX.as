@@ -3,7 +3,7 @@ namespace TMX {
     const int maxTmxUidsLength = 60; 
     // <https://api2.mania.exchange/Method/Index/53>
     Json::Value@ GetMapFromUid(const string &in uid) {
-        string url = getMapByUidEndpoint.Replace("{id}", uid);
+        string url = getMapByUidEndpoint.Replace("{uid}", uid);
         auto req = PluginGetRequest(url);
         req.Start();
         while (!req.Finished()) yield();
