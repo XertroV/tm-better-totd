@@ -2,35 +2,27 @@ class TmxMapInfo {
   /* Properties // Mixin: Default Properties */
   private uint _TrackID;
   private string _Name;
-  private MaybeOfString@ _Tags;
-  private array<int> _TagList;
+  private array<int> _Tags;
 
   /* Methods // Mixin: Default Constructor */
-  TmxMapInfo(uint TrackID, const string &in Name, MaybeOfString@ Tags, const int[] &in TagList) {
+  TmxMapInfo(uint TrackID, const string &in Name, const int[] &in Tags) {
     this._TrackID = TrackID;
     this._Name = Name;
-
-    if (Tags != "") {
-      @this._Tags = Tags;
-      this._TagList = TagList;
-    }
+    this._Tags = Tags;
   }
 
   /* Methods // Mixin: ToFrom JSON Object */
   TmxMapInfo(const Json::Value@ j) {
-    this._TrackID = uint(j["TrackID"]);
+    this._TrackID = uint(j["MapId"]);
     this._Name = string(j["Name"]);
-    @this._Tags = MaybeOfString(j["Tags"]);
-    auto tagsStr = _Tags.GetOr("");
+    auto tags = j["Tags"];
 
-    if (tagsStr != "") {
-      auto tags = tagsStr.Split(",");
-      this._TagList = array<int>(tags.Length);
-      for (uint i = 0; i < tags.Length; i++) {
-        int tagId;
-        if (Text::TryParseInt(tags[i], tagId) && tagId > 0 && tagId <= NUM_TAGS) {
-          this._TagList[i] = tagId;
-        }
+    this._Tags = array<int>(tags.Length);
+    for (uint i = 0; i < tags.Length; i++) {
+      auto tag = tags[i];
+      auto tagId = int(tag["TagId"]);
+      if (tagId > 0 && tagId <= NUM_TAGS) {
+        this._Tags[i] = tagId;
       }
     }
   }
@@ -57,18 +49,14 @@ class TmxMapInfo {
     return this._Name;
   }
 
-  MaybeOfString@ get_Tags() const {
+  const int[]@ get_Tags() const {
     return this._Tags;
-  }
-
-  const int[]@ get_TagList() const {
-    return this._TagList;
   }
 
   /* Methods // Mixin: ToString */
   const string ToString() {
     return 'TmxMapInfo('
-      + string::Join({'TrackID=' + tostring(TrackID), 'Name=' + Name, 'Tags=' + Tags.ToString(), 'TagList=' + TS_Array_int(TagList)}, ', ')
+      + string::Join({'TrackID=' + tostring(TrackID), 'Name=' + Name, 'Tags=' + TS_Array_int(Tags)}, ', ')
       + ')';
   }
 
@@ -86,18 +74,17 @@ class TmxMapInfo {
     if (other is null) {
       return false; // this obj can never be null.
     }
-    bool _tmp_arrEq_TagList = _TagList.Length == other.TagList.Length;
-    for (uint i = 0; i < _TagList.Length; i++) {
-      if (!_tmp_arrEq_TagList) {
+    bool _tmp_arrEq_Tags = _Tags.Length == other.Tags.Length;
+    for (uint i = 0; i < _Tags.Length; i++) {
+      if (!_tmp_arrEq_Tags) {
         break;
       }
-      _tmp_arrEq_TagList = _tmp_arrEq_TagList && (_TagList[i] == other.TagList[i]);
+      _tmp_arrEq_Tags = _tmp_arrEq_Tags && (_Tags[i] == other.Tags[i]);
     }
     return true
       && _TrackID == other.TrackID
       && _Name == other.Name
-      && _Tags == other.Tags
-      && _tmp_arrEq_TagList
+      && _tmp_arrEq_Tags
       ;
   }
 
@@ -105,16 +92,14 @@ class TmxMapInfo {
   void WriteToBuffer(MemoryBuffer@ buf) {
     buf.Write(_TrackID);
     WTB_LP_String(buf, _Name);
-    _Tags.WriteToBuffer(buf);
-    WTB_Array_Int(buf, _TagList);
+    WTB_Array_Int(buf, _Tags);
   }
 
   uint CountBufBytes() {
     uint bytes = 0;
     bytes += 4;
     bytes += 4 + _Name.Length;
-    bytes += _Tags.CountBufBytes();
-    bytes += CBB_Array_Int(_TagList);
+    bytes += CBB_Array_Int(_Tags);
     return bytes;
   }
 
@@ -148,11 +133,9 @@ namespace _TmxMapInfo {
     uint TrackID = buf.ReadUInt32();
     /* Parse field: Name of type: string */
     string Name = RFB_LP_String(buf);
-    /* Parse field: Tags of type: MaybeOfString@ */
-    MaybeOfString@ Tags = _MaybeOfString::ReadFromBuffer(buf);
-    /* Parse field: TagList of type: array<int> */
-    array<int> TagList = RFB_Array_Int(buf);
-    return TmxMapInfo(TrackID, Name, Tags, TagList);
+    /* Parse field: Tags of type: array<int> */
+    array<int> Tags = RFB_Array_Int(buf);
+    return TmxMapInfo(TrackID, Name, Tags);
   }
 
   const string RFB_LP_String(MemoryBuffer@ buf) {

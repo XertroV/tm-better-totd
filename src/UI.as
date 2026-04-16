@@ -288,9 +288,9 @@ void DrawTotdAll() {
     DrawTotdFilters();
     UI::Separator();
     if (filteredTotds is null) return;
-    dateWidth = Draw::MeasureString("2222-22-22  ").x;
-    timeWidth = Draw::MeasureString("00:00:00.000").x;
-    atCountWidth = Draw::MeasureString("99999 xx ").x;
+    dateWidth = UI::MeasureString("2222-22-22  ").x;
+    timeWidth = UI::MeasureString("00:00:00.000").x;
+    atCountWidth = UI::MeasureString("99999 xx ").x;
     if (UI::BeginChild("all-totds")) {
         UI::PushStyleColor(UI::Col::TableRowBg, overviewTableRowBg);
         if (UI::BeginTable("totds table", 9, UI::TableFlags::SizingFixedFit | UI::TableFlags::RowBg)) {

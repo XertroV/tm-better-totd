@@ -35,7 +35,7 @@ void CacheTmxInfoFor(string[] &in allUids) {
     string[] uids = {};
     for (uint i = 0; i < allUids.Length; i++) {
         uids.InsertLast(allUids[i]);
-        if (uids.Length >= 5) {
+        if (uids.Length >= TMX::maxTmxUidsLength) {
             CacheTmxInfoForChunk(uids);
             nbTmxReqs -= uids.Length;
             uids.RemoveRange(0, uids.Length);
@@ -48,29 +48,32 @@ void CacheTmxInfoFor(string[] &in allUids) {
 void CacheTmxInfoForChunk(string[] &in uids) {
     log_trace("["+Time::Now+"] Syncing chunk of " + uids.Length + " maps via TMX.");
     auto j = TMX::GetMapsByUids(uids);
-    if (j is null || j.GetType() != Json::Type::Array) {
+    if (j is null || !j.HasKey("Results")|| j["Results"].GetType() != Json::Type::Array) {
         log_warn("Failed tmx get maps by uid, trying once more in 1s");
         sleep(1000);
         @j = TMX::GetMapsByUids(uids);
     }
-    if (j is null || j.GetType() != Json::Type::Array) {
+    if (j is null || !j.HasKey("Results")|| j["Results"].GetType() != Json::Type::Array) {
         log_warn("Failed tmx get maps by uid for 2nd time, returning early.");
         return;
     }
-    for (uint i = 0; i < j.Length; i++) {
+
+    auto results = j["Results"];
+
+    for (uint i = 0; i < results.Length; i++) {
         try {
-            CacheTmxInfoForMap(j[i]);
+            CacheTmxInfoForMap(results[i]);
         } catch {
-            log_warn("Exception (" +getExceptionInfo()+ ") caching this data: " + Json::Write(j[i]));
+            log_warn("Exception (" +getExceptionInfo()+ ") caching this data: " + Json::Write(results[i]));
             throw(getExceptionInfo());
         }
     }
     log_trace("Size of TMX db: " + tmxDb.GetSize());
 }
 
-string[] copyTmxKeys = {"TrackID", "Name", "Tags"};
+string[] copyTmxKeys = {"MapId", "Name", "Tags"};
 
 void CacheTmxInfoForMap(Json::Value@ map) {
-    string uid = map.Get('TrackUID');
+    string uid = map["MapUid"];
     tmxDb.Set(uid, TmxMapInfo(map));
 }

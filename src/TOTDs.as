@@ -640,7 +640,7 @@ class LazyMap {
         UI::TableNextColumn();
         if (AtCount >= 0) {
             string _atCount = Text::Format("%d \\$071", AtCount) + Icons::Globe;
-            auto size = Draw::MeasureString(_atCount);
+            auto size = UI::MeasureString(_atCount);
             UI::SetCursorPos(UI::GetCursorPos() + vec2(atCountWidth - size.x, 0));
             UI::Text(_atCount);
         }
@@ -729,7 +729,7 @@ class LazyMap {
         if (PlayerRecordTime > 0) {
             // auto smallFontH = UI::GetTextLineHeight();
             UI::PushFont(g_BoldFont);
-            auto recSz = Draw::MeasureString(playerRecordTimeStrShort);
+            auto recSz = UI::MeasureString(playerRecordTimeStrShort);
             UI::SetCursorPos(pos + size * vec2(.5, .5) - recSz / 2.);
             UI::Text(playerRecordTimeStrShort);
             UI::PopFont();
