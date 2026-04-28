@@ -252,18 +252,18 @@ void DrawTagsSearchDescription() {
 
 bool TrackMatchesTagsFilters(TmxMapInfo@ info) {
     if (g_TrackTagsSetToAny) return true;
-    if (info is null || info.Tags.Length == 0) return false;
+    if (info is null || info.TagList.Length == 0) return false;
     if (g_TrackTagsModeExclusive) {
-        for (uint i = 0; i < info.Tags.Length; i++) {
-            if (info.Tags[i] > 0 && info.Tags[i] - 1 < int(tags.Length)) {
-                if (!tags[info.Tags[i] - 1].checked) return false;
+        for (uint i = 0; i < info.TagList.Length; i++) {
+            if (info.TagList[i] > 0 && info.TagList[i] - 1 < int(tags.Length)) {
+                if (!tags[info.TagList[i] - 1].checked) return false;
             }
         }
         return true;
     } else {
-        for (uint i = 0; i < info.Tags.Length; i++) {
-            if (info.Tags[i] > 0 && info.Tags[i] - 1 < int(tags.Length)) {
-                if (tags[info.Tags[i] - 1].checked) return true;
+        for (uint i = 0; i < info.TagList.Length; i++) {
+            if (info.TagList[i] > 0 && info.TagList[i] - 1 < int(tags.Length)) {
+                if (tags[info.TagList[i] - 1].checked) return true;
             } else {
                 // trace(tostring(info.Tags[i]));
             }
