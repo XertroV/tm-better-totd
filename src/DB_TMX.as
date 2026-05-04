@@ -1,5 +1,30 @@
 const string TMX_DB_PATH = IO::FromStorageFolder("tmx.db");
-DictOfTmxMapInfo_WriteLog@ tmxDb = DictOfTmxMapInfo_WriteLog(IO::FromStorageFolder(""), "tmx.db");
+DictOfTmxMapInfo_WriteLog@ tmxDb = InitializeTmxDB();
+
+DictOfTmxMapInfo_WriteLog@ InitializeTmxDB(bool allowDeleteAndRecreate = true) {
+    try {
+        return DictOfTmxMapInfo_WriteLog(IO::FromStorageFolder(""), "tmx.db");
+    } catch {
+        auto ex = getExceptionInfo();
+        log_error("Failed to initialize TMX DB: " + ex);
+        if (allowDeleteAndRecreate) {
+            log_warn("Deleting and recreating TMX DB...");
+            try {
+                if (IO::FileExists(TMX_DB_PATH)) {
+                    IO::Delete(TMX_DB_PATH);
+                }
+                return DictOfTmxMapInfo_WriteLog(IO::FromStorageFolder(""), "tmx.db");
+            } catch {
+                ex = getExceptionInfo();
+                log_error("Failed to delete and recreate TMX DB: " + ex);
+                throw(ex);
+            }
+        } else {
+            throw(ex);
+        }
+        return null;
+    }
+}
 
 void LoadTmxDB() {
     tmxDb.AwaitInitialized();
