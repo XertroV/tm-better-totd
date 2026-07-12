@@ -18,7 +18,7 @@ namespace TMX {
     // <https://api2.mania.exchange/Method/Index/53>
     Json::Value@ GetMapsByUids(string[] &in uids) {        
         if (uids.Length > maxTmxUidsLength) throw("Too many uids passed in at once");
-        string url = getMapByUidEndpoint.Replace("{uid}", string::Join(uids, ","));
+        string url = getMapByUidEndpoint.Replace("{uid}", Text::Join(uids, ","));
         auto req = PluginGetRequest(url);
         req.Start();
         while (!req.Finished()) yield();

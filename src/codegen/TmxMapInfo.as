@@ -66,7 +66,7 @@ class TmxMapInfo {
   /* Methods // Mixin: ToString */
   const string ToString() {
     return 'TmxMapInfo('
-      + string::Join({'TrackID=' + tostring(TrackID), 'Name=' + Name, 'Tags=' + Tags.ToString(), 'TagList=' + TS_Array_int(TagList)}, ', ')
+      + Text::Join({'TrackID=' + tostring(TrackID), 'Name=' + Name, 'Tags=' + Tags.ToString(), 'TagList=' + TS_Array_int(TagList)}, ', ')
       + ')';
   }
 

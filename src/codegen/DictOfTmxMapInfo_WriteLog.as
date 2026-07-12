@@ -167,7 +167,7 @@ namespace _DictOfTmxMapInfo_WriteLog {
     /* Methods // Mixin: ToString */
     const string ToString() {
       return 'KvPair('
-        + string::Join({'key=' + key, 'val=' + val.ToString()}, ', ')
+        + Text::Join({'key=' + key, 'val=' + val.ToString()}, ', ')
         + ')';
     }
 
