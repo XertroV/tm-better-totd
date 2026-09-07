@@ -2,7 +2,7 @@
 name     = "Better TOTD"
 author   = "XertroV"
 category = "Race"
-version  = "0.1.25"
+version  = "0.1.26"
 siteid   = 352
 
 [script]
