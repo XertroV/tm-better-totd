@@ -14,7 +14,7 @@ namespace AuthorTracker {
             @data = Json::FromFile(CACHE_FILE);
         if (IO::FileExists(CACHE_FILE_INFO))
             @meta = Json::FromFile(CACHE_FILE_INFO);
-        if (meta is null) {
+        if (meta is null || meta.GetType() != Json::Type::Object) {
             @meta = Json::Object();
             meta['lastRequested'] = "0";
         }
@@ -24,7 +24,8 @@ namespace AuthorTracker {
 
     int NextRequestWaitTimeSeconds() {
         if (meta is null) return 0;
-        int lastReq = Text::ParseInt(meta.Get('lastRequested'));
+        if (meta.GetType() != Json::Type::Object) return 0;
+        int lastReq = Text::ParseInt(meta.Get('lastRequested', '0'));
         auto lastReqAgo = Time::Stamp - lastReq;
         return Math::Max(0, CHECK_LIMIT_S - lastReqAgo);
     }

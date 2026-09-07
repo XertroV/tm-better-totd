@@ -59,11 +59,20 @@ namespace TOTD {
         auto totdJson = Live::GetTotdByMonth(1, offset);
         nbTotdReqs--;
 
+        if (totdJson is null) {
+            // request failed? retry later.
+            newTotdWaitFor = 8640;
+            newTotdAt = Time::Stamp + newTotdWaitFor;
+            startnew(NextSyncLoop);
+            NotifyWarning("Got null TOTD response for month (ix: " + monthIx + ")");
+            return;
+        }
+
         newTotdWaitFor = totdJson.Get('relativeNextRequest', 8640);
         newTotdAt = Time::Stamp + newTotdWaitFor;
         startnew(NextSyncLoop);
 
-        auto monthList = totdJson.Get('monthList');
+        auto monthList = totdJson.Get('monthList', Json::Array());
         if (monthList.Length == 0) {
             log_warn("Got empty TOTD month (ix: "+monthIx+")");
             return;
@@ -649,20 +658,24 @@ class LazyMap {
             SetMapLoadedSource(TrackLoadSrc::Filtered, ix);
             startnew(CoroutineFunc(LoadThisMapBlocking));
         }
+        bool shiftHeld = UI::IsKeyDown(UI::Key::LeftShift) || UI::IsKeyDown(UI::Key::RightShift);
+        bool ctrlHeld = UI::IsKeyDown(UI::Key::LeftCtrl) || UI::IsKeyDown(UI::Key::RightCtrl);
         UI::SameLine();
         if (UI::Button(TM_IO_ICON)) {
-            OpenBrowserURL('https://trackmania.io/#/leaderboard/' + uid);
+            if (shiftHeld) CopyAndNotify(GetTmIoUrl());
+            else if (ctrlHeld) CopyAndNotify(uid);
+            else OpenBrowserURL(GetTmIoUrl());
         }
+        AddSimpleTooltip("Open on trackmania.io\nShift+Click: copy URL\nCtrl+Click: copy UID");
         UI::SameLine();
         UI::BeginDisabled(GetTmxInfo() is null);
         if (UI::Button("TMX")) {
-            TMX::OpenTmxTrack(tmxInfo.TrackID);
+            if (shiftHeld) CopyAndNotify(GetTmxUrl());
+            else if (ctrlHeld) CopyAndNotify(tostring(tmxInfo.TrackID));
+            else TMX::OpenTmxTrack(tmxInfo.TrackID);
         }
         UI::EndDisabled();
-        // UI::SameLine();
-        // if (UI::Button("TMX")) {
-        //     // todo
-        // }
+        AddSimpleTooltip("Open on TMX\nShift+Click: copy URL\nCtrl+Click: copy TMX ID");
 
         UI::PopID();
     }
@@ -708,7 +721,13 @@ class LazyMap {
         PushButtonCols();
         bool pressed = UI::Button("", size);
         PopButtonCols();
-        if (UI::IsItemHovered()) DrawMapTooltip();
+        bool hovered = UI::IsItemHovered();
+        if (UI::BeginPopupContextItem("map-ctx-menu")) {
+            DrawMapContextMenu();
+            UI::EndPopup();
+        } else if (hovered) {
+            DrawMapTooltip();
+        }
         UI::PopID();
         auto endPos = UI::GetCursorPos();
 
@@ -736,12 +755,66 @@ class LazyMap {
         }
 
         UI::SetCursorPos(endPos);
+        UI::Dummy(vec2());
 
         if (pressed) {
             log_info("Play map: " + name);
             SetMapLoadedSource(TrackLoadSrc::Calendar);
             startnew(CoroutineFunc(LoadThisMapBlocking));
         }
+    }
+
+    void DrawMapContextMenu() {
+        DrawMapNameAndAuthor();
+
+        auto tmx = GetTmxInfo();
+        string tmxId = tmx is null ? "" : tostring(tmx.TrackID);
+
+        UI::Separator();
+        if (UI::BeginMenu("Medal Times")) {
+            if (UI::MenuItem("Copy AT", authorTime)) CopyAndNotify(authorTime);
+            if (UI::MenuItem("Copy Gold", goldTime)) CopyAndNotify(goldTime);
+            if (UI::MenuItem("Copy Silver", silverTime)) CopyAndNotify(silverTime);
+            if (UI::MenuItem("Copy Bronze", bronzeTime)) CopyAndNotify(bronzeTime);
+            UI::BeginDisabled(playerRecordTime <= 0);
+            if (UI::MenuItem("Copy PB", playerRecordTimeStr)) CopyAndNotify(playerRecordTimeStr);
+            UI::EndDisabled();
+            UI::EndMenu();
+        }
+        UI::Separator();
+        if (UI::MenuItem(Icons::ExternalLinkSquare + " Open on TM.io")) {
+            OpenBrowserURL(GetTmIoUrl());
+        }
+        UI::BeginDisabled(tmx is null);
+        if (UI::MenuItem(Icons::ExternalLinkSquare + " Open on TMX")) {
+            TMX::OpenTmxTrack(tmx.TrackID);
+        }
+        UI::EndDisabled();
+        UI::Separator();
+        if (UI::MenuItem(Icons::Clipboard + " Copy name")) {
+            CopyAndNotify(cleanName);
+        }
+        if (UI::MenuItem(Icons::Clipboard + " Copy UID", uid.SubStr(0, 13) + "...")) {
+            CopyAndNotify(uid);
+        }
+        UI::BeginDisabled(tmx is null);
+        if (UI::MenuItem(Icons::Clipboard + " Copy TMX ID", tmxId)) {
+            CopyAndNotify(tmxId);
+        }
+        UI::EndDisabled();
+        if (UI::MenuItem(Icons::Clipboard + " Copy TM.io URL")) {
+            CopyAndNotify(GetTmIoUrl());
+        }
+        UI::BeginDisabled(tmx is null);
+        if (UI::MenuItem(Icons::Clipboard + " Copy TMX URL")) {
+            CopyAndNotify(GetTmxUrl());
+        }
+        UI::EndDisabled();
+        UI::BeginDisabled(mapUrl.Length == 0);
+        if (UI::MenuItem(Icons::Clipboard + " Copy Nadeo URL")) {
+            CopyAndNotify(mapUrl);
+        }
+        UI::EndDisabled();
     }
 
     // set g_LastLoadedMapFromFiltered and g_LastLoadedMapFilteredIx before calling this
@@ -776,9 +849,7 @@ class LazyMap {
         LoadMapNowWrapper(mapUrl, settings);
     }
 
-    void DrawMapTooltip() {
-        UI::BeginTooltip();
-
+    void DrawMapNameAndAuthor() {
         UI_PushFont_Mid();
         UI::AlignTextToFramePadding();
         UI::Text(name);
@@ -787,6 +858,11 @@ class LazyMap {
         UI::SetCursorPos(UI::GetCursorPos() - off);
         UI::Text(authorByLine);
         UI::SetCursorPos(UI::GetCursorPos() + off);
+    }
+
+    void DrawMapTooltip() {
+        UI::BeginTooltip();
+        DrawMapNameAndAuthor();
         if (playerMedal == 0) PBText();
         UI::Text(iconAuthor + authorTime);
         if (playerMedal == 1) PBText();
@@ -796,6 +872,13 @@ class LazyMap {
         if (playerMedal == 3) PBText();
         UI::Text(iconBronze + bronzeTime);
         if (playerMedal > 3 || playerMedal < 0) PBText();
+        auto width = UI::GetContentRegionAvail().x;
+        auto iconDims = vec2(16.0, 16.0) * UI::GetScale();
+        auto pos = UI::GetCursorPos();
+        auto iconPos = vec2(Math::Max(90.0, width - iconDims.x), pos.y-iconDims.y);
+        UI::Dummy(vec2(iconPos.x + iconDims.x, 0));
+        UI::SetCursorPos(iconPos);
+        UI::Text(Icons::Kenney::MouseRightButton);
         UI::EndTooltip();
     }
 
@@ -837,6 +920,15 @@ class LazyMap {
         if (tmxDb.Exists(uid))
             @tmxInfo = tmxDb.Get(uid);
         return tmxInfo;
+    }
+
+    const string GetTmIoUrl() {
+        return 'https://trackmania.io/#/leaderboard/' + uid;
+    }
+
+    const string GetTmxUrl() {
+        if (GetTmxInfo() is null) return "";
+        return "https://trackmania.exchange/s/tr/" + tostring(tmxInfo.TrackID);
     }
 
     // UI::Texture@ tex;

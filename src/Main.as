@@ -54,6 +54,11 @@ void NotifyWarning(const string &in msg) {
     UI::ShowNotification(Meta::ExecutingPlugin().Name + ": Warning", msg, vec4(.9, .6, .2, .3), 15000);
 }
 
+void CopyAndNotify(const string &in text) {
+    IO::SetClipboard(text);
+    Notify("Copied: " + text);
+}
+
 const string PluginIcon = Icons::CalendarCheckO;
 const string MenuTitle = "\\$3bf" + PluginIcon + "\\$z " + Meta::ExecutingPlugin().Name;
 const string FullWindowTitle = MenuTitle + "\\$888   by XertroV";
